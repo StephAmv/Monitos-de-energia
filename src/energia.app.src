@@ -1,0 +1,15 @@
+{application, energia, [
+    {description, "Monitor de energia de edificio"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {energia_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        cowboy
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, []}
+ ]}.

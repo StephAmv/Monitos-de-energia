@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Energia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 { 
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .estado-conexion {
+            font-size: 0.6em;
+            font-weight: normal;
+            padding: 5px 12px;
+            border-radius: 4px;
+        }
+        .estado-conexion.conectado {
+            background: #4caf50;
+            color: white;
+        }
+        .estado-conexion.desconectado {
+            background: #f44336;
+            color: white;
+        }
+        .totales {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .totales h2 {
+            grid-column: 1 / -1;
+            margin: 0 0 10px 0;
+        }
+        .total-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .total-item strong {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .total-item .valor {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+        }
+        .piso-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .piso-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .piso-titulo {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        .piso-consumo {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .medidores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .medidor-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #ccc;
+        }
+        .medidor-card.normal {
+            border-left-color: #388e3c;
+        }
+        .medidor-card.alerta {
+            border-left-color: #f57c00;
+            background: #fff8e1;
+        }
+        .medidor-card.critico {
+            border-left-color: #d32f2f;
+            background: #ffebee;
+        }
+        .medidor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .medidor-titulo {
+            font-weight: bold;
+            color: #333;
+        }
+        .medidor-estado {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .medidor-estado.normal {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .medidor-estado.alerta {
+            background: #ffe0b2;
+            color: #e65100;
+        }
+        .medidor-estado.critico {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        .medidor-datos {
+            margin: 10px 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .medidor-datos div {
+            display: flex;
+            justify-content: space-between;
+        }
+        .medidor-botones {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-pico {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-falla {
+            background: #f44336;
+            color: white;
+        }
+        .alarmas {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+        .alarmas h2 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .alarmas ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .alarmas li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        .alarmas.sin-alarmas {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .alarmas.sin-alarmas h2 {
+            color: #155724;
+        }
+        .critico { color: #d32f2f; font-weight: bold; }
+        .alerta { color: #f57c00; font-weight: bold; }
+        .normal { color: #388e3c; }
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.85em;
+        }
+        .actualizado {
+            color: #666;
+            font-size: 0.9em;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .debug-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        Monitor de Energia del Edificio
+        <span id="estado-conexion" class="estado-conexion conectado">En vivo</span>
+    </h1>
+    
+    <div class="totales">
+        <h2>Totales del Edificio</h2>
+        <div class="total-item">
+            <strong>Consumo Actual</strong>
+            <div class="valor"><span id="total-kw">--</span> kW</div>
+        </div>
+        <div class="total-item">
+            <strong>Consumo Acumulado</strong>
+            <div class="valor"><span id="total-kwh">--</span> kWh</div>
+        </div>
+        <div class="total-item">
+            <strong>Alarmas Activas</strong>
+            <div class="valor"><span id="total-alarmas">--</span></div>
+        </div>
+    </div>
+    
+    <div id="alarmas-container"></div>
+    
+    <div id="pisos-container"></div>
+    
+    <div class="actualizado">
+        Ultima actualizacion: <span id="timestamp">--</span>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Datos en JSON:</h3>
+        <pre id="json-data">Cargando...</pre>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>
