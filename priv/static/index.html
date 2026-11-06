@@ -1,264 +1,563 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor de Energia</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 { 
-            color: #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .estado-conexion {
-            font-size: 0.6em;
-            font-weight: normal;
-            padding: 5px 12px;
-            border-radius: 4px;
-        }
-        .estado-conexion.conectado {
-            background: #4caf50;
-            color: white;
-        }
-        .estado-conexion.desconectado {
-            background: #f44336;
-            color: white;
-        }
-        .totales {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .totales h2 {
-            grid-column: 1 / -1;
-            margin: 0 0 10px 0;
-        }
-        .total-item {
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-        .total-item strong {
-            display: block;
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        .total-item .valor {
-            font-size: 1.5em;
-            color: #333;
-            font-weight: bold;
-        }
-        .piso-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .piso-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .piso-titulo {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-        }
-        .piso-consumo {
-            font-size: 0.9em;
-            color: #666;
-        }
-        .medidores-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .medidor-card {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #ccc;
-        }
-        .medidor-card.normal {
-            border-left-color: #388e3c;
-        }
-        .medidor-card.alerta {
-            border-left-color: #f57c00;
-            background: #fff8e1;
-        }
-        .medidor-card.critico {
-            border-left-color: #d32f2f;
-            background: #ffebee;
-        }
-        .medidor-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .medidor-titulo {
-            font-weight: bold;
-            color: #333;
-        }
-        .medidor-estado {
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .medidor-estado.normal {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-        .medidor-estado.alerta {
-            background: #ffe0b2;
-            color: #e65100;
-        }
-        .medidor-estado.critico {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-        .medidor-datos {
-            margin: 10px 0;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-        .medidor-datos div {
-            display: flex;
-            justify-content: space-between;
-        }
-        .medidor-botones {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-        .btn {
-            flex: 1;
-            padding: 6px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: opacity 0.2s;
-        }
-        .btn:hover {
-            opacity: 0.8;
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .btn-pico {
-            background: #ff9800;
-            color: white;
-        }
-        .btn-falla {
-            background: #f44336;
-            color: white;
-        }
-        .alarmas {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #ffc107;
-            margin-bottom: 20px;
-        }
-        .alarmas h2 {
-            margin-top: 0;
-            color: #856404;
-        }
-        .alarmas ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        .alarmas li {
-            margin: 8px 0;
-            line-height: 1.5;
-        }
-        .alarmas.sin-alarmas {
-            background: #d4edda;
-            border-left-color: #28a745;
-        }
-        .alarmas.sin-alarmas h2 {
-            color: #155724;
-        }
-        .critico { color: #d32f2f; font-weight: bold; }
-        .alerta { color: #f57c00; font-weight: bold; }
-        .normal { color: #388e3c; }
-        pre {
-            background: #f8f8f8;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 0.85em;
-        }
-        .actualizado {
-            color: #666;
-            font-size: 0.9em;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .debug-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-        }
-    </style>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Monitor de Energia</title>
+<!-- Google Fonts: Space Grotesk, Inter, JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed": "#6ffbbe",
+            "surface": "#0f131d",
+            "on-secondary-fixed": "#002113",
+            "surface-container-high": "#262a35",
+            "on-primary-container": "#004965",
+            "on-tertiary-fixed": "#2a1700",
+            "surface-container-lowest": "#0a0e18",
+            "primary-fixed-dim": "#7bd0ff",
+            "tertiary-fixed": "#ffddb8",
+            "on-tertiary-container": "#613b00",
+            "on-primary-fixed": "#001e2c",
+            "primary": "#8ed5ff",
+            "on-primary-fixed-variant": "#004c69",
+            "on-tertiary": "#472a00",
+            "error-container": "#93000a",
+            "surface-container-low": "#171b26",
+            "inverse-on-surface": "#2c303b",
+            "surface-variant": "#313540",
+            "on-error-container": "#ffdad6",
+            "surface-tint": "#7bd0ff",
+            "on-surface-variant": "#bdc8d1",
+            "secondary-fixed-dim": "#4edea3",
+            "outline-variant": "#3e484f",
+            "on-primary": "#00354a",
+            "background": "#0f131d",
+            "primary-container": "#38bdf8",
+            "secondary-container": "#00a572",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-bright": "#353944",
+            "on-background": "#dfe2f1",
+            "on-surface": "#dfe2f1",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-container": "#1c1f2a",
+            "on-error": "#690005",
+            "surface-container-highest": "#313540",
+            "inverse-primary": "#00668a",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-secondary": "#003824",
+            "tertiary": "#ffc174",
+            "surface-dim": "#0f131d",
+            "primary-fixed": "#c4e7ff",
+            "secondary": "#4edea3",
+            "error": "#ffb4ab",
+            "tertiary-container": "#f59e0b",
+            "inverse-surface": "#dfe2f1",
+            "outline": "#87929a",
+            "on-secondary-container": "#00311f"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-2xl": "3rem",
+            "gutter": "1.25rem",
+            "gutter-mobile": "0.75rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin-mobile": "1rem",
+            "margin": "2rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "label-xs": ["Inter"],
+            "metric-medium": ["JetBrains Mono"],
+            "body-semibold": ["Inter"],
+            "label-code": ["JetBrains Mono"],
+            "headline-md": ["Space Grotesk"],
+            "metric-sm": ["JetBrains Mono"],
+            "metric-large": ["JetBrains Mono"],
+            "body-lg": ["Inter"],
+            "body-base": ["Inter"],
+            "display-kpi-mobile": ["Space Grotesk"],
+            "display-kpi": ["Space Grotesk"],
+            "headline-xl": ["Space Grotesk"],
+            "headline-lg": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "label-xs": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "metric-medium": ["20px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-semibold": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-code": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "metric-sm": ["15px", { "lineHeight": "20px", "fontWeight": "500" }],
+            "metric-large": ["28px", { "lineHeight": "32px", "fontWeight": "700" }],
+            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "body-base": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "display-kpi-mobile": ["36px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "display-kpi": ["48px", { "lineHeight": "52px", "fontWeight": "700" }],
+            "headline-xl": ["32px", { "lineHeight": "38px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "30px", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Telemetry glow accents */
+    .glow-cyan-subtle {
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.12);
+    }
+    .glow-alert-red {
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.2);
+    }
+  </style>
 </head>
-<body>
-    <h1>
-        Monitor de Energia del Edificio
-        <span id="estado-conexion" class="estado-conexion conectado">En vivo</span>
-    </h1>
-    
-    <div class="totales">
-        <h2>Totales del Edificio</h2>
-        <div class="total-item">
-            <strong>Consumo Actual</strong>
-            <div class="valor"><span id="total-kw">--</span> kW</div>
-        </div>
-        <div class="total-item">
-            <strong>Consumo Acumulado</strong>
-            <div class="valor"><span id="total-kwh">--</span> kWh</div>
-        </div>
-        <div class="total-item">
-            <strong>Alarmas Activas</strong>
-            <div class="valor"><span id="total-alarmas">--</span></div>
-        </div>
+<body class="bg-surface text-on-surface antialiased font-body-base text-body-base min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
+<!-- TOP APP BAR -->
+<header class="flex justify-between items-center w-full px-margin py-space-sm bg-surface-container-low border-b border-outline-variant sticky top-0 z-50">
+  <div class="flex items-center gap-space-lg">
+    <div class="flex items-center gap-space-sm">
+      <span class="material-symbols-outlined text-primary" data-icon="bolt">bolt</span>
+      <span class="text-headline-md font-headline-md font-bold text-on-surface tracking-tight">Monitor de Energia</span>
     </div>
-    
-    <div id="alarmas-container"></div>
-    
-    <div id="pisos-container"></div>
-    
-    <div class="actualizado">
-        Ultima actualizacion: <span id="timestamp">--</span>
+    <div class="flex items-center gap-space-sm">
+      <div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary" id="livePill">
+        <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
+        <span class="w-2.5 h-2.5 -ml-3.5 rounded-full bg-secondary"></span>
+        <span class="font-body-semibold text-body-base ml-1">En vivo</span>
+      </div>
     </div>
-    
-    <div class="debug-section">
-        <h3>Datos en JSON:</h3>
-        <pre id="json-data">Cargando...</pre>
+  </div>
+  <div class="flex items-center gap-space-xs px-space-md py-1 bg-surface-container rounded border border-outline-variant font-body-base text-on-surface-variant">
+    <span class="material-symbols-outlined text-outline" data-icon="schedule">schedule</span>
+    <span class="font-body-semibold text-body-base text-on-surface" id="currentTimestamp">--:--:--</span>
+  </div>
+</header>
+
+<!-- MAIN SCENARIO CANVAS -->
+<main class="flex-1 w-full px-margin-mobile md:px-margin py-space-lg space-y-space-xl max-w-[1600px] mx-auto">
+
+<!-- 1. THREE BIG KPI STAT CARDS -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter" id="vista-general">
+  <article class="bg-surface-container-low border border-outline-variant rounded-lg p-space-lg flex flex-col justify-between">
+    <span class="text-on-surface-variant font-body-semibold text-body-base uppercase tracking-wide">Consumo Total</span>
+    <div class="my-space-md flex items-baseline gap-space-xs">
+      <span class="font-display-kpi text-display-kpi text-on-surface font-bold tracking-tight" id="kpiTotalKW">0.0</span>
+      <span class="font-body-semibold text-headline-md text-primary">kW</span>
     </div>
+    <p class="text-body-base text-on-surface-variant">Demanda instantanea global de las instalaciones</p>
+  </article>
+  
+  <article class="bg-surface-container-low border border-outline-variant rounded-lg p-space-lg flex flex-col justify-between">
+    <span class="text-on-surface-variant font-body-semibold text-body-base uppercase tracking-wide">Energia Acumulada</span>
+    <div class="my-space-md flex items-baseline gap-space-xs">
+      <span class="font-display-kpi text-display-kpi text-on-surface font-bold tracking-tight" id="kpiTotalKWh">0.00</span>
+      <span class="font-body-semibold text-headline-md text-primary">kWh</span>
+    </div>
+    <p class="text-body-base text-on-surface-variant">Consumo diario registrado del ciclo actual</p>
+  </article>
+  
+  <article class="bg-surface-container-low border border-outline-variant rounded-lg p-space-lg flex flex-col justify-between" id="kpiAlarmCard">
+    <span class="text-on-surface-variant font-body-semibold text-body-base uppercase tracking-wide">Alarmas Activas</span>
+    <div class="my-space-md flex items-baseline gap-space-xs">
+      <span class="font-display-kpi text-display-kpi text-on-surface font-bold tracking-tight" id="kpiAlarmCount">0</span>
+      <span class="font-body-semibold text-headline-md text-on-surface">eventos</span>
+    </div>
+    <p class="text-body-base text-on-surface-variant" id="kpiAlarmSubtext">Todo en orden</p>
+  </article>
+</section>
+
+<!-- 2. DETAILED FLOOR BREAKDOWN -->
+<section class="space-y-gutter">
+  <div class="pb-space-xs border-b border-outline-variant">
+    <h2 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Desglose por Pisos</h2>
+    <p class="text-on-surface-variant text-body-base">Monitoreo directo por alimentador y submedicion activa</p>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg" id="pisos-container">
+    <!-- Pisos se generan dinamicamente aqui -->
+  </div>
+</section>
+
+<!-- 3. SECTION: ALARMAS Y EVENTOS DEL SISTEMA -->
+<section class="bg-surface-container-low border border-outline-variant rounded-lg p-space-lg space-y-space-md" id="alarmas">
+  <div class="pb-space-xs border-b border-outline-variant">
+    <h2 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Alarmas y Eventos</h2>
+    <p class="text-on-surface-variant text-body-base">Registro simplificado de anomalias activas</p>
+  </div>
+  
+  <div class="overflow-x-auto" id="activeAlarmsContainer">
+    <table class="w-full text-left border-collapse">
+      <thead class="border-b border-outline-variant font-body-semibold text-body-base text-on-surface-variant">
+        <tr>
+          <th class="py-space-sm px-space-md">Piso</th>
+          <th class="py-space-sm px-space-md">Medidor</th>
+          <th class="py-space-sm px-space-md">Estado</th>
+          <th class="py-space-sm px-space-md">kW Registrado</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant text-body-base font-body-base" id="alarmas-tbody">
+        <!-- Alarmas se generan dinamicamente aqui -->
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="hidden p-space-lg bg-secondary-container/10 border border-secondary/40 rounded-lg text-center" id="allOkBanner">
+    <div class="flex items-center justify-center gap-space-sm">
+      <span class="material-symbols-outlined text-secondary" data-icon="check_circle">check_circle</span>
+      <span class="font-body-semibold text-body-lg text-secondary">Sistema operando en condiciones nominales</span>
+    </div>
+    <p class="text-on-surface-variant text-body-base mt-2">No hay alarmas activas en este momento</p>
+  </div>
+</section>
+
+</main>
+
+<!-- SCRIPT -->
+<script>
+(function() {
+  'use strict';
+  
+  // Estado
+  let ultimosDatos = null;
+  let ultimaActualizacion = null;
+  let isLive = true;
+  
+  // Elementos del DOM
+  const elements = {
+    kpiTotalKW: document.getElementById('kpiTotalKW'),
+    kpiTotalKWh: document.getElementById('kpiTotalKWh'),
+    kpiAlarmCount: document.getElementById('kpiAlarmCount'),
+    kpiAlarmCard: document.getElementById('kpiAlarmCard'),
+    kpiAlarmSubtext: document.getElementById('kpiAlarmSubtext'),
+    pisosContainer: document.getElementById('pisos-container'),
+    alarmasTbody: document.getElementById('alarmas-tbody'),
+    activeAlarmsContainer: document.getElementById('activeAlarmsContainer'),
+    allOkBanner: document.getElementById('allOkBanner'),
+    livePill: document.getElementById('livePill'),
+    currentTimestamp: document.getElementById('currentTimestamp')
+  };
+  
+  // Actualizar timestamp
+  function actualizarTimestamp() {
+    if (ultimaActualizacion) {
+      const d = ultimaActualizacion;
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      elements.currentTimestamp.textContent = hh + ':' + mm + ':' + ss;
+    }
+  }
+  
+  // Actualizar indicador En vivo / Reconectando
+  function actualizarLivePill(conectado) {
+    if (conectado) {
+      elements.livePill.className = "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary";
+      elements.livePill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>' +
+        '<span class="w-2.5 h-2.5 -ml-3.5 rounded-full bg-secondary"></span>' +
+        '<span class="font-body-semibold text-body-base ml-1">En vivo</span>';
+    } else {
+      elements.livePill.className = "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/20 border border-tertiary-container text-tertiary-container";
+      elements.livePill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>' +
+        '<span class="font-body-semibold text-body-base ml-1">Reconectando...</span>';
+    }
+    isLive = conectado;
+  }
+  
+  // Actualizar KPIs
+  function actualizarKPIs(datos) {
+    elements.kpiTotalKW.textContent = datos.total_kw.toFixed(1);
+    elements.kpiTotalKWh.textContent = datos.total_kwh.toFixed(2);
+    elements.kpiAlarmCount.textContent = datos.alarmas.length;
     
-    <script src="/static/app.js"></script>
+    if (datos.alarmas.length === 0) {
+      // Sin alarmas: verde
+      elements.kpiAlarmCard.className = "bg-surface-container-low border border-secondary rounded-lg p-space-lg flex flex-col justify-between";
+      elements.kpiAlarmCount.className = "font-display-kpi text-display-kpi text-secondary font-bold tracking-tight";
+      elements.kpiAlarmCard.querySelector('span[class*="eventos"]').className = "font-body-semibold text-headline-md text-secondary";
+      elements.kpiAlarmSubtext.className = "text-body-base text-secondary";
+      elements.kpiAlarmSubtext.textContent = "Todo en orden";
+    } else {
+      // Con alarmas: rojo
+      elements.kpiAlarmCard.className = "bg-surface-container-low border border-error/50 rounded-lg p-space-lg flex flex-col justify-between glow-alert-red";
+      elements.kpiAlarmCount.className = "font-display-kpi text-display-kpi text-error font-bold tracking-tight";
+      elements.kpiAlarmCard.querySelector('span[class*="eventos"]').className = "font-body-semibold text-headline-md text-error";
+      elements.kpiAlarmSubtext.className = "text-body-base text-error";
+      
+      const criticas = datos.alarmas.filter(a => a.estado === 'critico').length;
+      const alertas = datos.alarmas.filter(a => a.estado === 'alerta').length;
+      elements.kpiAlarmSubtext.textContent = criticas + ' critica(s) y ' + alertas + ' alerta(s)';
+    }
+  }
+  
+  // Renderizar pisos
+  function renderizarPisos(datos) {
+    const pisosPorNumero = {};
+    
+    // Agrupar medidores por piso
+    datos.medidores.forEach(function(m) {
+      if (!pisosPorNumero[m.piso]) {
+        pisosPorNumero[m.piso] = [];
+      }
+      pisosPorNumero[m.piso].push(m);
+    });
+    
+    // Verificar si la estructura cambio
+    const pisosActuales = Object.keys(pisosPorNumero).sort();
+    let necesitaReconstruir = false;
+    
+    if (!ultimosDatos || ultimosDatos.medidores.length !== datos.medidores.length) {
+      necesitaReconstruir = true;
+    }
+    
+    if (necesitaReconstruir) {
+      // Reconstruir todo
+      elements.pisosContainer.innerHTML = '';
+      pisosActuales.forEach(function(numeroPiso) {
+        const pisoDiv = crearPiso(numeroPiso, datos.pisos.find(function(p) { return p.piso === parseInt(numeroPiso); }), pisosPorNumero[numeroPiso]);
+        elements.pisosContainer.appendChild(pisoDiv);
+      });
+    } else {
+      // Solo actualizar valores
+      pisosActuales.forEach(function(numeroPiso) {
+        actualizarPiso(numeroPiso, datos.pisos.find(function(p) { return p.piso === parseInt(numeroPiso); }), pisosPorNumero[numeroPiso]);
+      });
+    }
+  }
+  
+  // Crear elemento de piso
+  function crearPiso(numero, dataPiso, medidores) {
+    const pisoDiv = document.createElement('div');
+    pisoDiv.className = "bg-surface-container-low border border-outline-variant rounded-lg p-space-lg flex flex-col space-y-space-md";
+    pisoDiv.id = "piso-" + numero;
+    
+    pisoDiv.innerHTML = '<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant">' +
+      '<h3 class="text-headline-md font-headline-md font-bold text-on-surface">Piso ' + numero + '</h3>' +
+      '<div class="text-right">' +
+      '<span class="text-primary font-body-semibold text-headline-md font-bold piso-kw">' + (dataPiso ? dataPiso.total_kw.toFixed(1) : '0.0') + ' kW</span>' +
+      '<span class="text-on-surface-variant text-body-base ml-2 piso-kwh">• ' + (dataPiso ? dataPiso.total_kwh.toFixed(0) : '0') + ' kWh</span>' +
+      '</div></div>' +
+      '<div class="space-y-space-sm medidores-container"></div>';
+    
+    const medidoresContainer = pisoDiv.querySelector('.medidores-container');
+    medidores.forEach(function(m) {
+      medidoresContainer.appendChild(crearMedidor(m));
+    });
+    
+    return pisoDiv;
+  }
+  
+  // Actualizar piso existente
+  function actualizarPiso(numero, dataPiso, medidores) {
+    const pisoDiv = document.getElementById('piso-' + numero);
+    if (!pisoDiv) return;
+    
+    pisoDiv.querySelector('.piso-kw').textContent = (dataPiso ? dataPiso.total_kw.toFixed(1) : '0.0') + ' kW';
+    pisoDiv.querySelector('.piso-kwh').textContent = '• ' + (dataPiso ? dataPiso.total_kwh.toFixed(0) : '0') + ' kWh';
+    
+    medidores.forEach(function(m) {
+      actualizarMedidor(numero, m);
+    });
+  }
+  
+  // Crear elemento de medidor
+  function crearMedidor(m) {
+    const estadoClasses = {
+      normal: { badge: 'bg-secondary-container/20 border-secondary text-secondary', border: 'border-outline-variant', bar: 'bg-secondary', text: 'text-on-surface' },
+      alerta: { badge: 'bg-tertiary-container/20 border-tertiary-container text-tertiary', border: 'border-outline-variant', bar: 'bg-tertiary-container', text: 'text-on-surface' },
+      critico: { badge: 'bg-error/20 border-error text-error', border: 'border-error', bar: 'bg-error', text: 'text-error' }
+    };
+    const est = estadoClasses[m.estado];
+    const porcentaje = Math.min(100, (m.kw / m.umbral) * 100);
+    
+    const estadoLabel = { normal: 'Normal', alerta: 'Alerta', critico: 'Critico' }[m.estado];
+    
+    const medidorDiv = document.createElement('div');
+    medidorDiv.className = "p-space-sm bg-surface-container rounded border " + est.border + " flex flex-col gap-1";
+    medidorDiv.setAttribute('data-piso', m.piso);
+    medidorDiv.setAttribute('data-medidor', m.id);
+    
+    medidorDiv.innerHTML = '<div class="flex justify-between items-center">' +
+      '<span class="font-body-semibold text-body-base text-on-surface">Medidor ' + m.id + '</span>' +
+      '<span class="px-space-xs py-0.5 ' + est.badge + ' border font-body-semibold text-body-base rounded medidor-estado-badge">' + estadoLabel + '</span>' +
+      '</div>' +
+      '<div class="flex justify-between items-center text-body-base text-on-surface-variant">' +
+      '<span class="font-body-semibold ' + est.text + ' medidor-valores">' + m.kw.toFixed(1) + ' kW / ' + m.kwh.toFixed(0) + ' kWh</span>' +
+      '<span class="medidor-max">Max: ' + m.umbral.toFixed(1) + ' kW</span>' +
+      '</div>' +
+      '<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden my-1">' +
+      '<div class="' + est.bar + ' h-full rounded-full medidor-barra" style="width: ' + porcentaje.toFixed(1) + '%;"></div>' +
+      '</div>' +
+      '<div class="flex justify-end gap-space-xs">' +
+      '<button class="px-space-sm py-0.5 text-body-base font-body-semibold text-primary hover:bg-surface-variant border border-primary/30 rounded" data-accion="pico" data-piso="' + m.piso + '" data-medidor="' + m.id + '">Simular pico</button>' +
+      '<button class="px-space-sm py-0.5 text-body-base font-body-semibold text-error hover:bg-error/10 border border-error/40 rounded" data-accion="falla" data-piso="' + m.piso + '" data-medidor="' + m.id + '">Simular falla</button>' +
+      '</div>';
+    
+    return medidorDiv;
+  }
+  
+  // Actualizar medidor existente
+  function actualizarMedidor(piso, m) {
+    const medidorDiv = document.querySelector('[data-piso="' + piso + '"][data-medidor="' + m.id + '"]');
+    if (!medidorDiv) return;
+    
+    const estadoClasses = {
+      normal: { badge: 'bg-secondary-container/20 border-secondary text-secondary', border: 'border-outline-variant', bar: 'bg-secondary', text: 'text-on-surface' },
+      alerta: { badge: 'bg-tertiary-container/20 border-tertiary-container text-tertiary', border: 'border-outline-variant', bar: 'bg-tertiary-container', text: 'text-on-surface' },
+      critico: { badge: 'bg-error/20 border-error text-error', border: 'border-error', bar: 'bg-error', text: 'text-error' }
+    };
+    const est = estadoClasses[m.estado];
+    const porcentaje = Math.min(100, (m.kw / m.umbral) * 100);
+    const estadoLabel = { normal: 'Normal', alerta: 'Alerta', critico: 'Critico' }[m.estado];
+    
+    // Actualizar borde
+    medidorDiv.className = "p-space-sm bg-surface-container rounded border " + est.border + " flex flex-col gap-1";
+    
+    // Actualizar badge de estado
+    const badge = medidorDiv.querySelector('.medidor-estado-badge');
+    badge.className = 'px-space-xs py-0.5 ' + est.badge + ' border font-body-semibold text-body-base rounded medidor-estado-badge';
+    badge.textContent = estadoLabel;
+    
+    // Actualizar valores
+    const valores = medidorDiv.querySelector('.medidor-valores');
+    valores.className = 'font-body-semibold ' + est.text + ' medidor-valores';
+    valores.textContent = m.kw.toFixed(1) + ' kW / ' + m.kwh.toFixed(0) + ' kWh';
+    
+    // Actualizar max
+    medidorDiv.querySelector('.medidor-max').textContent = 'Max: ' + m.umbral.toFixed(1) + ' kW';
+    
+    // Actualizar barra
+    const barra = medidorDiv.querySelector('.medidor-barra');
+    barra.className = est.bar + ' h-full rounded-full medidor-barra';
+    barra.style.width = porcentaje.toFixed(1) + '%';
+  }
+  
+  // Renderizar tabla de alarmas
+  function renderizarAlarmas(datos) {
+    if (datos.alarmas.length === 0) {
+      elements.activeAlarmsContainer.classList.add('hidden');
+      elements.allOkBanner.classList.remove('hidden');
+      elements.alarmasTbody.innerHTML = '';
+    } else {
+      elements.activeAlarmsContainer.classList.remove('hidden');
+      elements.allOkBanner.classList.add('hidden');
+      
+      elements.alarmasTbody.innerHTML = '';
+      datos.alarmas.forEach(function(a) {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container transition-colors";
+        
+        const estadoClasses = a.estado === 'critico' 
+          ? 'bg-error/20 border-error text-error' 
+          : 'bg-tertiary-container/20 border-tertiary-container text-tertiary';
+        const estadoLabel = a.estado === 'critico' ? 'Critico' : 'Alerta';
+        const kwClass = a.estado === 'critico' ? 'text-error' : 'text-tertiary';
+        
+        tr.innerHTML = '<td class="py-space-md px-space-md font-body-semibold text-on-surface">Piso ' + a.piso + '</td>' +
+          '<td class="py-space-md px-space-md text-on-surface font-body-semibold">Medidor ' + a.id + '</td>' +
+          '<td class="py-space-md px-space-md"><span class="px-space-xs py-0.5 rounded ' + estadoClasses + ' border font-body-semibold">' + estadoLabel + '</span></td>' +
+          '<td class="py-space-md px-space-md font-body-semibold ' + kwClass + '">' + a.kw.toFixed(1) + ' kW</td>';
+        
+        elements.alarmasTbody.appendChild(tr);
+      });
+    }
+  }
+  
+  // Fetch datos del backend
+  function fetchDatos() {
+    fetch('/api/edificio')
+      .then(function(response) {
+        if (!response.ok) throw new Error('Error ' + response.status);
+        return response.json();
+      })
+      .then(function(datos) {
+        ultimosDatos = datos;
+        ultimaActualizacion = new Date();
+        actualizarLivePill(true);
+        actualizarKPIs(datos);
+        renderizarPisos(datos);
+        renderizarAlarmas(datos);
+        actualizarTimestamp();
+      })
+      .catch(function(error) {
+        console.error('Error al obtener datos:', error);
+        actualizarLivePill(false);
+      });
+  }
+  
+  // Delegacion de eventos para botones
+  document.addEventListener('click', function(e) {
+    const target = e.target;
+    if (!target.hasAttribute('data-accion')) return;
+    
+    const accion = target.getAttribute('data-accion');
+    const piso = target.getAttribute('data-piso');
+    const medidor = target.getAttribute('data-medidor');
+    
+    if (!accion || !piso || !medidor) return;
+    
+    const textoOriginal = target.textContent;
+    target.disabled = true;
+    target.textContent = 'Enviando...';
+    
+    const url = '/api/demo/' + accion + '/' + piso + '/' + medidor;
+    
+    fetch(url, { method: 'POST' })
+      .then(function(response) {
+        if (response.ok) {
+          setTimeout(function() {
+            target.disabled = false;
+            target.textContent = textoOriginal;
+          }, 1500);
+        } else {
+          target.disabled = false;
+          target.textContent = textoOriginal;
+          console.error('Error en ' + accion + ':', response.status);
+        }
+      })
+      .catch(function(error) {
+        target.disabled = false;
+        target.textContent = textoOriginal;
+        console.error('Error en ' + accion + ':', error);
+      });
+  });
+  
+  // Iniciar
+  fetchDatos();
+  setInterval(fetchDatos, 2000);
+  setInterval(actualizarTimestamp, 1000);
+})();
+</script>
+
 </body>
 </html>
