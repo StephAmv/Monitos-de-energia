@@ -244,320 +244,215 @@
 </main>
 
 <!-- SCRIPT -->
+
 <script>
-(function() {
-  'use strict';
-  
-  // Estado
-  let ultimosDatos = null;
-  let ultimaActualizacion = null;
-  let isLive = true;
-  
-  // Elementos del DOM
-  const elements = {
-    kpiTotalKW: document.getElementById('kpiTotalKW'),
-    kpiTotalKWh: document.getElementById('kpiTotalKWh'),
-    kpiAlarmCount: document.getElementById('kpiAlarmCount'),
-    kpiAlarmCard: document.getElementById('kpiAlarmCard'),
-    kpiAlarmSubtext: document.getElementById('kpiAlarmSubtext'),
-    pisosContainer: document.getElementById('pisos-container'),
-    alarmasTbody: document.getElementById('alarmas-tbody'),
-    activeAlarmsContainer: document.getElementById('activeAlarmsContainer'),
-    allOkBanner: document.getElementById('allOkBanner'),
-    livePill: document.getElementById('livePill'),
-    currentTimestamp: document.getElementById('currentTimestamp')
-  };
-  
-  // Actualizar timestamp
-  function actualizarTimestamp() {
-    if (ultimaActualizacion) {
-      const d = ultimaActualizacion;
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      const ss = String(d.getSeconds()).padStart(2, '0');
-      elements.currentTimestamp.textContent = hh + ':' + mm + ':' + ss;
+    // ==========================================
+    // RELOJ EN TIEMPO REAL
+    // ==========================================
+    function updateClock() {
+        const el = document.getElementById('currentTimestamp');
+
+        if (!el) return;
+
+        const now = new Date();
+        const options = {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        };
+
+        el.textContent = now.toLocaleDateString('es-ES', options).replace(',', ' -');
     }
-  }
-  
-  // Actualizar indicador En vivo / Reconectando
-  function actualizarLivePill(conectado) {
-    if (conectado) {
-      elements.livePill.className = "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary";
-      elements.livePill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>' +
-        '<span class="w-2.5 h-2.5 -ml-3.5 rounded-full bg-secondary"></span>' +
-        '<span class="font-body-semibold text-body-base ml-1">En vivo</span>';
-    } else {
-      elements.livePill.className = "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/20 border border-tertiary-container text-tertiary-container";
-      elements.livePill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>' +
-        '<span class="font-body-semibold text-body-base ml-1">Reconectando...</span>';
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+
+    // ==========================================
+    // ALTERNAR ESTADO DE CONEXIÓN
+    // ==========================================
+    let isLive = true;
+
+    const toggleReconnectBtn = document.getElementById('toggleReconnectBtn');
+    const livePill = document.getElementById('livePill');
+
+    if (toggleReconnectBtn && livePill) {
+        toggleReconnectBtn.addEventListener('click', () => {
+            isLive = !isLive;
+
+            if (isLive) {
+                livePill.className =
+                    "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 border border-secondary/40 text-secondary";
+
+                livePill.innerHTML = `
+                    <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
+                    <span class="w-2.5 h-2.5 -ml-3.5 rounded-full bg-secondary"></span>
+                    <span class="font-body-semibold text-body-base ml-1">En vivo</span>
+                `;
+
+                toggleReconnectBtn.textContent = "(Ver Reconectando...)";
+
+            } else {
+                livePill.className =
+                    "flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-tertiary-container/20 border border-tertiary-container text-tertiary-container";
+
+                livePill.innerHTML = `
+                    <span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>
+                    <span class="font-body-semibold text-body-base ml-1">Reconectando...</span>
+                `;
+
+                toggleReconnectBtn.textContent = "(Restaurar En vivo)";
+            }
+        });
     }
-    isLive = conectado;
-  }
-  
-  // Actualizar KPIs
-  function actualizarKPIs(datos) {
-    elements.kpiTotalKW.textContent = datos.total_kw.toFixed(1);
-    elements.kpiTotalKWh.textContent = datos.total_kwh.toFixed(2);
-    elements.kpiAlarmCount.textContent = datos.alarmas.length;
-    
-    if (datos.alarmas.length === 0) {
-      // Sin alarmas: verde
-      elements.kpiAlarmCard.className = "bg-surface-container-low border border-secondary rounded-lg p-space-lg flex flex-col justify-between";
-      elements.kpiAlarmCount.className = "font-display-kpi text-display-kpi text-secondary font-bold tracking-tight";
-      elements.kpiAlarmCard.querySelector('span[class*="eventos"]').className = "font-body-semibold text-headline-md text-secondary";
-      elements.kpiAlarmSubtext.className = "text-body-base text-secondary";
-      elements.kpiAlarmSubtext.textContent = "Todo en orden";
-    } else {
-      // Con alarmas: rojo
-      elements.kpiAlarmCard.className = "bg-surface-container-low border border-error/50 rounded-lg p-space-lg flex flex-col justify-between glow-alert-red";
-      elements.kpiAlarmCount.className = "font-display-kpi text-display-kpi text-error font-bold tracking-tight";
-      elements.kpiAlarmCard.querySelector('span[class*="eventos"]').className = "font-body-semibold text-headline-md text-error";
-      elements.kpiAlarmSubtext.className = "text-body-base text-error";
-      
-      const criticas = datos.alarmas.filter(a => a.estado === 'critico').length;
-      const alertas = datos.alarmas.filter(a => a.estado === 'alerta').length;
-      elements.kpiAlarmSubtext.textContent = criticas + ' critica(s) y ' + alertas + ' alerta(s)';
+
+
+    // ==========================================
+    // ELEMENTOS GENERALES
+    // ==========================================
+    const btnSimularGeneral = document.getElementById('btnSimularGeneral');
+    const simulationAlertBanner = document.getElementById('simulationAlertBanner');
+    const kpiTotalKW = document.getElementById('kpiTotalKW');
+    const capacityBar = document.getElementById('capacityBar');
+    const kpiPercent = document.getElementById('kpiPercent');
+
+
+    // ==========================================
+    // SIMULACIÓN GENERAL
+    // Solo se activa si los elementos existen
+    // ==========================================
+    if (btnSimularGeneral) {
+        btnSimularGeneral.addEventListener('click', () => {
+
+            if (simulationAlertBanner) {
+                simulationAlertBanner.classList.remove('hidden');
+            }
+
+            if (kpiTotalKW) {
+                kpiTotalKW.textContent = "168.4";
+            }
+
+            if (capacityBar) {
+                capacityBar.style.width = "84.2%";
+                capacityBar.className =
+                    "bg-tertiary-container h-full rounded-full transition-all duration-500";
+            }
+
+            if (kpiPercent) {
+                kpiPercent.textContent = "84.2%";
+                kpiPercent.className =
+                    "font-body-semibold text-tertiary-container";
+            }
+        });
     }
-  }
-  
-  // Renderizar pisos
-  function renderizarPisos(datos) {
-    const pisosPorNumero = {};
-    
-    // Agrupar medidores por piso
-    datos.medidores.forEach(function(m) {
-      if (!pisosPorNumero[m.piso]) {
-        pisosPorNumero[m.piso] = [];
-      }
-      pisosPorNumero[m.piso].push(m);
-    });
-    
-    // Verificar si la estructura cambio
-    const pisosActuales = Object.keys(pisosPorNumero).sort();
-    let necesitaReconstruir = false;
-    
-    if (!ultimosDatos || ultimosDatos.medidores.length !== datos.medidores.length) {
-      necesitaReconstruir = true;
-    }
-    
-    if (necesitaReconstruir) {
-      // Reconstruir todo
-      elements.pisosContainer.innerHTML = '';
-      pisosActuales.forEach(function(numeroPiso) {
-        const pisoDiv = crearPiso(numeroPiso, datos.pisos.find(function(p) { return p.piso === parseInt(numeroPiso); }), pisosPorNumero[numeroPiso]);
-        elements.pisosContainer.appendChild(pisoDiv);
-      });
-    } else {
-      // Solo actualizar valores
-      pisosActuales.forEach(function(numeroPiso) {
-        actualizarPiso(numeroPiso, datos.pisos.find(function(p) { return p.piso === parseInt(numeroPiso); }), pisosPorNumero[numeroPiso]);
-      });
-    }
-  }
-  
-  // Crear elemento de piso
-  function crearPiso(numero, dataPiso, medidores) {
-    const pisoDiv = document.createElement('div');
-    pisoDiv.className = "bg-surface-container-low border border-outline-variant rounded-lg p-space-lg flex flex-col space-y-space-md";
-    pisoDiv.id = "piso-" + numero;
-    
-    pisoDiv.innerHTML = '<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant">' +
-      '<h3 class="text-headline-md font-headline-md font-bold text-on-surface">Piso ' + numero + '</h3>' +
-      '<div class="text-right">' +
-      '<span class="text-primary font-body-semibold text-headline-md font-bold piso-kw">' + (dataPiso ? dataPiso.total_kw.toFixed(1) : '0.0') + ' kW</span>' +
-      '<span class="text-on-surface-variant text-body-base ml-2 piso-kwh">• ' + (dataPiso ? dataPiso.total_kwh.toFixed(0) : '0') + ' kWh</span>' +
-      '</div></div>' +
-      '<div class="space-y-space-sm medidores-container"></div>';
-    
-    const medidoresContainer = pisoDiv.querySelector('.medidores-container');
-    medidores.forEach(function(m) {
-      medidoresContainer.appendChild(crearMedidor(m));
-    });
-    
-    return pisoDiv;
-  }
-  
-  // Actualizar piso existente
-  function actualizarPiso(numero, dataPiso, medidores) {
-    const pisoDiv = document.getElementById('piso-' + numero);
-    if (!pisoDiv) return;
-    
-    pisoDiv.querySelector('.piso-kw').textContent = (dataPiso ? dataPiso.total_kw.toFixed(1) : '0.0') + ' kW';
-    pisoDiv.querySelector('.piso-kwh').textContent = '• ' + (dataPiso ? dataPiso.total_kwh.toFixed(0) : '0') + ' kWh';
-    
-    medidores.forEach(function(m) {
-      actualizarMedidor(numero, m);
-    });
-  }
-  
-  // Crear elemento de medidor
-  function crearMedidor(m) {
-    const estadoClasses = {
-      normal: { badge: 'bg-secondary-container/20 border-secondary text-secondary', border: 'border-outline-variant', bar: 'bg-secondary', text: 'text-on-surface' },
-      alerta: { badge: 'bg-tertiary-container/20 border-tertiary-container text-tertiary', border: 'border-outline-variant', bar: 'bg-tertiary-container', text: 'text-on-surface' },
-      critico: { badge: 'bg-error/20 border-error text-error', border: 'border-error', bar: 'bg-error', text: 'text-error' }
-    };
-    const est = estadoClasses[m.estado];
-    const porcentaje = Math.min(100, (m.kw / m.umbral) * 100);
-    
-    const estadoLabel = { normal: 'Normal', alerta: 'Alerta', critico: 'Critico' }[m.estado];
-    
-    const medidorDiv = document.createElement('div');
-    medidorDiv.className = "p-space-sm bg-surface-container rounded border " + est.border + " flex flex-col gap-1";
-    medidorDiv.setAttribute('data-piso', m.piso);
-    medidorDiv.setAttribute('data-medidor', m.id);
-    
-    medidorDiv.innerHTML = '<div class="flex justify-between items-center">' +
-      '<span class="font-body-semibold text-body-base text-on-surface">Medidor ' + m.id + '</span>' +
-      '<span class="px-space-xs py-0.5 ' + est.badge + ' border font-body-semibold text-body-base rounded medidor-estado-badge">' + estadoLabel + '</span>' +
-      '</div>' +
-      '<div class="flex justify-between items-center text-body-base text-on-surface-variant">' +
-      '<span class="font-body-semibold ' + est.text + ' medidor-valores">' + m.kw.toFixed(1) + ' kW / ' + m.kwh.toFixed(0) + ' kWh</span>' +
-      '<span class="medidor-max">Max: ' + m.umbral.toFixed(1) + ' kW</span>' +
-      '</div>' +
-      '<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden my-1">' +
-      '<div class="' + est.bar + ' h-full rounded-full medidor-barra" style="width: ' + porcentaje.toFixed(1) + '%;"></div>' +
-      '</div>' +
-      '<div class="flex justify-end gap-space-xs">' +
-      '<button class="px-space-sm py-0.5 text-body-base font-body-semibold text-primary hover:bg-surface-variant border border-primary/30 rounded" data-accion="pico" data-piso="' + m.piso + '" data-medidor="' + m.id + '">Simular pico</button>' +
-      '<button class="px-space-sm py-0.5 text-body-base font-body-semibold text-error hover:bg-error/10 border border-error/40 rounded" data-accion="falla" data-piso="' + m.piso + '" data-medidor="' + m.id + '">Simular falla</button>' +
-      '</div>';
-    
-    return medidorDiv;
-  }
-  
-  // Actualizar medidor existente
-  function actualizarMedidor(piso, m) {
-    const medidorDiv = document.querySelector('[data-piso="' + piso + '"][data-medidor="' + m.id + '"]');
-    if (!medidorDiv) return;
-    
-    const estadoClasses = {
-      normal: { badge: 'bg-secondary-container/20 border-secondary text-secondary', border: 'border-outline-variant', bar: 'bg-secondary', text: 'text-on-surface' },
-      alerta: { badge: 'bg-tertiary-container/20 border-tertiary-container text-tertiary', border: 'border-outline-variant', bar: 'bg-tertiary-container', text: 'text-on-surface' },
-      critico: { badge: 'bg-error/20 border-error text-error', border: 'border-error', bar: 'bg-error', text: 'text-error' }
-    };
-    const est = estadoClasses[m.estado];
-    const porcentaje = Math.min(100, (m.kw / m.umbral) * 100);
-    const estadoLabel = { normal: 'Normal', alerta: 'Alerta', critico: 'Critico' }[m.estado];
-    
-    // Actualizar borde
-    medidorDiv.className = "p-space-sm bg-surface-container rounded border " + est.border + " flex flex-col gap-1";
-    
-    // Actualizar badge de estado
-    const badge = medidorDiv.querySelector('.medidor-estado-badge');
-    badge.className = 'px-space-xs py-0.5 ' + est.badge + ' border font-body-semibold text-body-base rounded medidor-estado-badge';
-    badge.textContent = estadoLabel;
-    
-    // Actualizar valores
-    const valores = medidorDiv.querySelector('.medidor-valores');
-    valores.className = 'font-body-semibold ' + est.text + ' medidor-valores';
-    valores.textContent = m.kw.toFixed(1) + ' kW / ' + m.kwh.toFixed(0) + ' kWh';
-    
-    // Actualizar max
-    medidorDiv.querySelector('.medidor-max').textContent = 'Max: ' + m.umbral.toFixed(1) + ' kW';
-    
-    // Actualizar barra
-    const barra = medidorDiv.querySelector('.medidor-barra');
-    barra.className = est.bar + ' h-full rounded-full medidor-barra';
-    barra.style.width = porcentaje.toFixed(1) + '%';
-  }
-  
-  // Renderizar tabla de alarmas
-  function renderizarAlarmas(datos) {
-    if (datos.alarmas.length === 0) {
-      elements.activeAlarmsContainer.classList.add('hidden');
-      elements.allOkBanner.classList.remove('hidden');
-      elements.alarmasTbody.innerHTML = '';
-    } else {
-      elements.activeAlarmsContainer.classList.remove('hidden');
-      elements.allOkBanner.classList.add('hidden');
-      
-      elements.alarmasTbody.innerHTML = '';
-      datos.alarmas.forEach(function(a) {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-surface-container transition-colors";
-        
-        const estadoClasses = a.estado === 'critico' 
-          ? 'bg-error/20 border-error text-error' 
-          : 'bg-tertiary-container/20 border-tertiary-container text-tertiary';
-        const estadoLabel = a.estado === 'critico' ? 'Critico' : 'Alerta';
-        const kwClass = a.estado === 'critico' ? 'text-error' : 'text-tertiary';
-        
-        tr.innerHTML = '<td class="py-space-md px-space-md font-body-semibold text-on-surface">Piso ' + a.piso + '</td>' +
-          '<td class="py-space-md px-space-md text-on-surface font-body-semibold">Medidor ' + a.id + '</td>' +
-          '<td class="py-space-md px-space-md"><span class="px-space-xs py-0.5 rounded ' + estadoClasses + ' border font-body-semibold">' + estadoLabel + '</span></td>' +
-          '<td class="py-space-md px-space-md font-body-semibold ' + kwClass + '">' + a.kw.toFixed(1) + ' kW</td>';
-        
-        elements.alarmasTbody.appendChild(tr);
-      });
-    }
-  }
-  
-  // Fetch datos del backend
-  function fetchDatos() {
-    fetch('/api/edificio')
-      .then(function(response) {
-        if (!response.ok) throw new Error('Error ' + response.status);
-        return response.json();
-      })
-      .then(function(datos) {
-        ultimosDatos = datos;
-        ultimaActualizacion = new Date();
-        actualizarLivePill(true);
-        actualizarKPIs(datos);
-        renderizarPisos(datos);
-        renderizarAlarmas(datos);
-        actualizarTimestamp();
-      })
-      .catch(function(error) {
-        console.error('Error al obtener datos:', error);
-        actualizarLivePill(false);
-      });
-  }
-  
-  // Delegacion de eventos para botones
-  document.addEventListener('click', function(e) {
-    const target = e.target;
-    if (!target.hasAttribute('data-accion')) return;
-    
-    const accion = target.getAttribute('data-accion');
-    const piso = target.getAttribute('data-piso');
-    const medidor = target.getAttribute('data-medidor');
-    
-    if (!accion || !piso || !medidor) return;
-    
-    const textoOriginal = target.textContent;
-    target.disabled = true;
-    target.textContent = 'Enviando...';
-    
-    const url = '/api/demo/' + accion + '/' + piso + '/' + medidor;
-    
-    fetch(url, { method: 'POST' })
-      .then(function(response) {
-        if (response.ok) {
-          setTimeout(function() {
-            target.disabled = false;
-            target.textContent = textoOriginal;
-          }, 1500);
-        } else {
-          target.disabled = false;
-          target.textContent = textoOriginal;
-          console.error('Error en ' + accion + ':', response.status);
+
+
+    // ==========================================
+    // SIMULAR PICO DE CONSUMO
+    // ==========================================
+    function simularPico(meterId, newKw, label) {
+        const el = document.getElementById(meterId);
+
+        if (el) {
+            el.textContent = newKw.toFixed(1) + " kW";
+            el.classList.add("text-error", "animate-pulse");
+
+            setTimeout(() => {
+                el.classList.remove("animate-pulse");
+            }, 2000);
         }
-      })
-      .catch(function(error) {
-        target.disabled = false;
-        target.textContent = textoOriginal;
-        console.error('Error en ' + accion + ':', error);
-      });
-  });
-  
-  // Iniciar
-  fetchDatos();
-  setInterval(fetchDatos, 2000);
-  setInterval(actualizarTimestamp, 1000);
-})();
+
+        if (simulationAlertBanner) {
+            simulationAlertBanner.classList.remove('hidden');
+        }
+    }
+
+
+    // ==========================================
+    // SIMULAR FALLA DE MEDIDOR
+    // ==========================================
+    function simularFalla(meterId, circuitName) {
+        const el = document.getElementById(meterId);
+
+        if (el) {
+            el.textContent = "0.0 kW (DISPARO)";
+            el.classList.add("text-error");
+        }
+
+        if (simulationAlertBanner) {
+            simulationAlertBanner.classList.remove('hidden');
+        }
+
+        alert(
+            `[ALERTA DE RELÉ SCADA] Disparo de interruptor simulado en: ${circuitName}. Protecciones térmicas actuadas.`
+        );
+    }
+
+
+    // ==========================================
+    // RECONOCER ALARMA
+    // ==========================================
+    function reconocerAlarma(btn) {
+        const row = btn.closest('tr');
+
+        if (row) {
+            btn.disabled = true;
+            btn.textContent = "Reconocida";
+
+            btn.className =
+                "px-space-sm py-1 bg-surface-container text-on-surface-variant font-body-semibold rounded border border-outline-variant text-body-base cursor-default";
+
+            row.classList.remove("border-error", "border-tertiary-container");
+            row.classList.add("opacity-50");
+        }
+    }
+
+
+    // ==========================================
+    // ALTERNAR VISTA DE ALARMAS
+    // ==========================================
+    function toggleAlarmView(view) {
+        const activeTable = document.getElementById('activeAlarmsContainer');
+        const okBanner = document.getElementById('allOkBanner');
+        const viewActiveBtn = document.getElementById('viewActiveBtn');
+        const viewNormalBtn = document.getElementById('viewNormalBtn');
+
+        if (!activeTable || !okBanner) return;
+
+        if (view === 'nominal') {
+            activeTable.classList.add('hidden');
+            okBanner.classList.remove('hidden');
+
+            if (viewNormalBtn) {
+                viewNormalBtn.className =
+                    "px-space-md py-1 rounded-full font-body-semibold text-body-base bg-secondary/20 text-secondary border border-secondary transition-all flex items-center gap-1";
+            }
+
+            if (viewActiveBtn) {
+                viewActiveBtn.className =
+                    "px-space-md py-1 rounded-full font-body-semibold text-body-base text-on-surface-variant hover:text-on-surface transition-all";
+            }
+
+        } else {
+            activeTable.classList.remove('hidden');
+            okBanner.classList.add('hidden');
+
+            if (viewActiveBtn) {
+                viewActiveBtn.className =
+                    "px-space-md py-1 rounded-full font-body-semibold text-body-base bg-surface-container-high text-on-surface border border-primary/30 transition-all";
+            }
+
+            if (viewNormalBtn) {
+                viewNormalBtn.className =
+                    "px-space-md py-1 rounded-full font-body-semibold text-body-base text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1";
+            }
+        }
+    }
 </script>
+
 
 </body>
 </html>
