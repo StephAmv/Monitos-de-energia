@@ -69,3 +69,51 @@ test(carga_s5, [setup(cargar_escenario(s5))]) :-
     lectura(p2_compartido, kw, 9.0, 57600).
 
 :- end_tests(carga_escenarios).
+
+% ============================================================================
+% Fase 2: Pruebas de predicados base
+% ============================================================================
+
+:- begin_tests(base).
+
+test(ultima_lectura_s0, [setup(cargar_escenario(s0_normal))]) :-
+    ultima_lectura(acometida, kw, V, S),
+    assertion(V == 25),
+    assertion(S == 44995).
+
+test(edad_s0, [setup(cargar_escenario(s0_normal))]) :-
+    edad(acometida, E),
+    assertion(E == 5).  % ahora(45000) - ultima(44995) = 5
+
+test(fresca_s0, [setup(cargar_escenario(s0_normal))]) :-
+    fresca(acometida, kw, Estado),
+    assertion(Estado == si).  % edad 5 < 15
+
+test(valor_conocido_s0, [setup(cargar_escenario(s0_normal))]) :-
+    valor(acometida, kw, R),
+    R = conocido(V),
+    assertion(V == 25).
+
+test(fresca_s3_vieja, [setup(cargar_escenario(s3))]) :-
+    fresca(p1_alumbrado, kw, Estado),
+    assertion(Estado == no).  % edad 40 > 15
+
+test(valor_desconocido_vieja_s3, [setup(cargar_escenario(s3))]) :-
+    valor(p1_alumbrado, kw, R),
+    assertion(R = desconocido(vieja)).
+
+test(valor_sin_lectura, [setup(cargar_escenario(s0_normal))]) :-
+    valor(acometida, kwh, R),
+    assertion(R = desconocido(sin_dato)).
+
+test(segundo_a_hora) :-
+    segundo_del_dia_a_hora(0, H1),
+    assertion(H1 == '00:00'),
+    segundo_del_dia_a_hora(3661, H2),
+    assertion(H2 == '01:01'),
+    segundo_del_dia_a_hora(43200, H3),
+    assertion(H3 == '12:00'),
+    segundo_del_dia_a_hora(86399, H4),
+    assertion(H4 == '23:59').
+
+:- end_tests(base).

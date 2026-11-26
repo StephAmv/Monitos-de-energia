@@ -56,12 +56,64 @@
 :- use_module(library(apply)).
 :- use_module(hechos).
 
+% ============================================================================
+% Fase 2: Base - predicados fundamentales
+% ============================================================================
+
+% ultima_lectura(+Medidor, +Variable, -Valor, -Segundo): ultima lectura disponible
+ultima_lectura(M, Var, Valor, Seg) :-
+    findall(S-V, lectura(M, Var, V, S), Pares),
+    Pares \= [],
+    sort(Pares, Ordenados),
+    reverse(Ordenados, [Seg-Valor|_]).
+
+% edad(+Medidor, -Segundos): edad de la ultima consulta del medidor
+edad(M, Edad) :-
+    ahora(Ahora),
+    findall(S, (lectura(M, _, _, S) ; consulta(M, _, _, S)), Segundos),
+    Segundos \= [],
+    max_list(Segundos, UltimoSeg),
+    Edad is Ahora - UltimoSeg.
+
+% fresca(+Medidor, +Variable, -Estado): si | no | no_se
+fresca(M, Var, Estado) :-
+    limite(vieja_s, MaxEdad),
+    ( \+ lectura(M, Var, _, _) ->
+        Estado = no_se
+    ; ultima_lectura(M, Var, _, SegLectura),
+      ahora(Ahora),
+      Edad is Ahora - SegLectura,
+      ( Edad =< MaxEdad ->
+          % Verificar si hay timeout despues de la lectura
+          ( (findall(S, consulta(M, timeout, _, S), Timeouts),
+             member(ST, Timeouts),
+             ST > SegLectura) ->
+              Estado = no
+          ;   Estado = si
+          )
+      ;   Estado = no
+      )
+    ).
+
+% valor(+Medidor, +Variable, -Resultado): conocido(V) | desconocido(Razon)
+valor(M, Var, R) :-
+    fresca(M, Var, Estado),
+    ( Estado == si ->
+        ultima_lectura(M, Var, V, _),
+        R = conocido(V)
+    ; Estado == no ->
+        R = desconocido(vieja)
+    ; Estado == no_se ->
+        R = desconocido(sin_dato)
+    ).
+
+% segundo_del_dia_a_hora(+Segundo, -Texto): formato "HH:MM"
+segundo_del_dia_a_hora(S, Texto) :-
+    H is S // 3600,
+    M is (S mod 3600) // 60,
+    format(atom(Texto), '~|~`0t~d~2+:~|~`0t~d~2+', [H, M]).
+
 % Stubs temporales (se implementaran en las siguientes fases)
-ultima_lectura(_, _, _, _) :- fail.
-edad(_, _) :- fail.
-fresca(_, _, _) :- fail.
-valor(_, _, _) :- fail.
-segundo_del_dia_a_hora(_, _) :- fail.
 ventana_actual(_, _) :- fail.
 acumulado_ventana(_, _) :- fail.
 proyeccion(_, _, _, _) :- fail.
