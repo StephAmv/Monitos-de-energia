@@ -171,3 +171,39 @@ test(proyeccion_sin_compresor_s1b, [setup(cargar_escenario(s1b))]) :-
     assertion(abs(Promedio - 38.37) < 0.1).
 
 :- end_tests(situacion1).
+
+% ============================================================================
+% Fase 4: Pruebas de Situacion 2 - Contador
+% ============================================================================
+
+:- begin_tests(situacion2).
+
+test(salto_reinicio_s2, [setup(cargar_escenario(s2))]) :-
+    salto_contador(p1_alumbrado, Tipo, _),
+    assertion(Tipo == reinicio).
+
+test(consumo_medidor_reinicio_s2, [setup(cargar_escenario(s2))]) :-
+    consumo_medidor(p1_alumbrado, 36000, 36300, R),
+    R = entre(Min, Max),
+    assertion(abs(Min - 0.1) < 0.01),
+    assertion(abs(Max - 0.6) < 0.01).
+
+test(consumo_piso_s2, [setup(cargar_escenario(s2))]) :-
+    consumo_piso(piso1, 36000, 36300, R, _),
+    R = se_sabe(C),
+    assertion(abs(C - 2.0) < 0.01).
+
+test(desbordamiento, [setup(cargar_escenario(s2_desbord))]) :-
+    salto_contador(test_med, Tipo, _),
+    assertion(Tipo == desbordamiento),
+    consumo_medidor(test_med, 1000, 2000, R),
+    R = se_sabe(C),
+    assertion(abs(C - 0.7) < 0.01).
+
+test(dato_corrupto, [setup(cargar_escenario(s2_corrupto))]) :-
+    salto_contador(test_med2, Tipo, _),
+    assertion(Tipo == dato_corrupto),
+    consumo_medidor(test_med2, 1000, 2000, R),
+    assertion(R = no_se_puede_saber).
+
+:- end_tests(situacion2).

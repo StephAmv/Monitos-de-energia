@@ -20,7 +20,7 @@
     % Situacion 2 (6.2)
     salto_contador/3,
     consumo_medidor/4,
-    consumo_piso/4,
+    consumo_piso/5,
     
     % Situacion 3 (6.3)
     timeouts/2,
@@ -256,10 +256,112 @@ diferir(Motor, Hasta, Area) :-
     motor(Motor, Medidor, _, _),
     area(Area, Medidor).
 
+% ============================================================================
+% Fase 4: Situacion 2 - Contador
+% ============================================================================
+
+% salto_contador(+Medidor, -Tipo, -Evidencia)
+salto_contador(M, Tipo, Evidencia) :-
+    findall(S-K, lectura(M, kwh, K, S), Lecturas),
+    Lecturas \= [],
+    sort(Lecturas, Ordenadas),
+    % Buscar el ultimo salto hacia abajo
+    encontrar_salto(Ordenadas, S1, K1, S2, K2),
+    limite(max_contador, Max),
+    Margen is Max * 0.01,
+    ( evento(M, reinicio, TE), TE > S1, TE < S2 ->
+        Tipo = reinicio,
+        Evidencia = [anterior(K1, S1), nuevo(K2, S2), evento_reinicio(TE)]
+    ; K1 >= (Max - Margen) ->
+        Tipo = desbordamiento,
+        Evidencia = [anterior(K1, S1), nuevo(K2, S2), cerca_maximo(Max)]
+    ;   Tipo = dato_corrupto,
+        Evidencia = [anterior(K1, S1), nuevo(K2, S2), sin_explicacion]
+    ).
+
+% encontrar_salto(+Lecturas, -S1, -K1, -S2, -K2): encuentra el ultimo salto hacia abajo
+encontrar_salto([S1-K1, S2-K2|_], S1, K1, S2, K2) :-
+    K2 < K1, !.
+encontrar_salto([_|Rest], S1, K1, S2, K2) :-
+    encontrar_salto(Rest, S1, K1, S2, K2).
+
+% consumo_medidor(+Medidor, +Desde, +Hasta, -Resultado)
+consumo_medidor(M, Desde, Hasta, R) :-
+    ( \+ lectura(M, kwh, _, _) ->
+        R = no_se_puede_saber
+    ; salto_contador(M, Tipo, Ev) ->
+        ( Tipo == reinicio ->
+            % Consumo entre lo medido despues del reinicio y lo que dice el general
+            member(evento_reinicio(TReinicio), Ev),
+            findall(S-K, (lectura(M, kwh, K, S), S >= Desde, S =< Hasta, S > TReinicio), LecturasDespues),
+            ( LecturasDespues = [] ->
+                R = no_se_puede_saber
+            ;   sort(LecturasDespues, Ordenadas),
+                reverse(Ordenadas, [_-KFin|_]),
+                ConsumoMin is KFin,
+                % Buscar consumo del general
+                ( cuelga_de(M, General),
+                  consumo_medidor(General, Desde, Hasta, RGen),
+                  RGen = se_sabe(CGen),
+                  findall(CM, (cuelga_de(Otro, General), Otro \= M,
+                               consumo_medidor(Otro, Desde, Hasta, se_sabe(CM))), COtros),
+                  sumlist(COtros, SumaOtros),
+                  ConsumoMax is CGen - SumaOtros ->
+                    R = entre(ConsumoMin, ConsumoMax)
+                ;   R = se_sabe(ConsumoMin)
+                )
+            )
+        ; Tipo == desbordamiento ->
+            limite(max_contador, Max),
+            findall(S-K, (lectura(M, kwh, K, S), S >= Desde, S =< Hasta), Lecturas),
+            sort(Lecturas, Ordenadas),
+            reverse(Ordenadas, [_-KFin|_]),
+            Ordenadas = [_-KIni|_],
+            Consumo is (Max - KIni) + KFin,
+            R = se_sabe(Consumo)
+        ;   % dato_corrupto
+            R = no_se_puede_saber
+        )
+    ;   % Sin salto, calculo normal
+        findall(S-K, (lectura(M, kwh, K, S), S >= Desde, S =< Hasta), Lecturas),
+        ( Lecturas = [] ->
+            R = no_se_puede_saber
+        ;   sort(Lecturas, Ordenadas),
+            reverse(Ordenadas, [_-KFin|_]),
+            Ordenadas = [_-KIni|_],
+            ( KFin >= KIni ->
+                Consumo is KFin - KIni,
+                R = se_sabe(Consumo)
+            ;   R = no_se_puede_saber
+            )
+        )
+    ).
+
+% consumo_piso(+Piso, +Desde, +Hasta, -Resultado, -Sustento)
+consumo_piso(Piso, Desde, Hasta, R, Sustento) :-
+    % Buscar el medidor general del piso
+    ( medidor(General, Piso, _, _),
+      atom_concat(_, '_general', General),
+      consumo_medidor(General, Desde, Hasta, RGen),
+      RGen = se_sabe(C) ->
+        R = se_sabe(C),
+        Sustento = [medidor_general(General, C)]
+    ;   % Sumar los consumos de los medidores que cuelgan
+        findall(C, (cuelga_de(M, _), medidor(M, Piso, _, _),
+                    consumo_medidor(M, Desde, Hasta, se_sabe(C))), Consumos),
+        ( Consumos = [] ->
+            R = no_se_puede_saber,
+            Sustento = [sin_datos]
+        ; member(no_se_puede_saber, Consumos) ->
+            R = no_se_puede_saber,
+            Sustento = [medidor_sin_dato]
+        ;   sumlist(Consumos, Total),
+            R = se_sabe(Total),
+            Sustento = [suma_medidores(Consumos)]
+        )
+    ).
+
 % Stubs temporales (se implementaran en las siguientes fases)
-salto_contador(_, _, _) :- fail.
-consumo_medidor(_, _, _, _) :- fail.
-consumo_piso(_, _, _, _) :- fail.
 timeouts(_, _) :- fail.
 lento(_, _) :- fail.
 causante_bus(_, _, _) :- fail.

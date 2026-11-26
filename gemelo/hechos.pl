@@ -91,7 +91,7 @@ rango(a, 0, 500).
 
 % cargar_escenario(+Nombre): carga un archivo de escenario
 cargar_escenario(Nombre) :-
-    member(Nombre, [s0_normal, s1a, s1b, s2, s3, s4a, s4b, s4c, s5]),
+    member(Nombre, [s0_normal, s1a, s1b, s2, s2_desbord, s2_corrupto, s3, s4a, s4b, s4c, s5]),
     retractall(ahora(_)),
     retractall(lectura(_, _, _, _)),
     retractall(consulta(_, _, _, _)),
