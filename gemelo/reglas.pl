@@ -431,16 +431,166 @@ aislar(M, Explicacion) :-
     findall(V, victima(V, M), Victimas),
     Explicacion = [causante(M), victimas(Victimas)].
 
+% ============================================================================
+% Fase 6: Situacion 4 - Caida de voltaje
+% ============================================================================
+
+% caida_voltaje(?Medidor, -Segundo)
+caida_voltaje(M, Seg) :-
+    limite(voltaje_bajo, Umbral),
+    lectura(M, v, V, Seg),
+    V < Umbral.
+
+% causa_caida(+Piso, -Causa, -Evidencia, -Descartada, -DatoQueFalta)
+causa_caida(Piso, Causa, Evidencia, Descartada, DatoQueFalta) :-
+    ahora(Ahora),
+    TBusqueda is Ahora - 20,
+    ( \+ caida_voltaje(_, S), S >= TBusqueda ->
+        Causa = sin_caida,
+        Evidencia = [],
+        Descartada = ninguna,
+        DatoQueFalta = ninguno
+    ; caida_voltaje(acometida, SAcom), SAcom >= TBusqueda ->
+        % Si cae la acometida, verifica si tambien cae un piso sin motores
+        ( (medidor(MOtro, PisoOtro, _, _),
+           PisoOtro \= Piso,
+           \+ piso_tiene_motores(PisoOtro),
+           caida_voltaje(MOtro, SOtro),
+           SOtro >= TBusqueda) ->
+            Causa = red,
+            Evidencia = [acometida_bajo(SAcom), piso_sin_motores_bajo(PisoOtro, SOtro)],
+            Descartada = arranque_motores,
+            DatoQueFalta = ninguno
+        ;   % Solo acometida
+            Causa = red,
+            Evidencia = [acometida_bajo(SAcom)],
+            Descartada = arranque_motores,
+            DatoQueFalta = ninguno
+        )
+    ; piso_tiene_motores(Piso),
+      medidor(MMotores, Piso, _, _),
+      atom_concat(_, 'motores', MMotores),
+      caida_voltaje(_, SCaida),
+      SCaida >= TBusqueda ->
+        % Primero verificar si tenemos los datos necesarios
+        ( ( \+ (lectura(acometida, v, _, TA), TA >= TBusqueda, TA =< Ahora) ;
+            \+ (lectura(MMotores, kw, _, TM), TM >= TBusqueda, TM =< Ahora) ) ->
+            Causa = no_se_puede_decir,
+            Evidencia = [caida_detectada(SCaida)],
+            Descartada = ninguna,
+            DatoQueFalta = datos_faltantes([acometida_v, motores_kw])
+        ; evento(_, arranque, TA), TA >= (SCaida - 10), TA =< SCaida,
+          lectura(MMotores, kw, KwAntes, TAntes),
+          lectura(MMotores, kw, KwDespues, TDespues),
+          TAntes < TA,
+          TDespues >= TA,
+          KwDespues > KwAntes ->
+            Causa = arranque_motores,
+            Evidencia = [potencia_sube(KwAntes, KwDespues), caida(SCaida)],
+            Descartada = red,
+            DatoQueFalta = ninguno
+        ;   Causa = medidor_local,
+            Evidencia = [caida_detectada(SCaida)],
+            Descartada = red,
+            DatoQueFalta = ninguno
+        )
+    ;   Causa = sin_caida,
+        Evidencia = [],
+        Descartada = ninguna,
+        DatoQueFalta = ninguno
+    ).
+
+% ============================================================================
+% Fase 7: Situacion 5 - Reparto
+% ============================================================================
+
+% reparto_lectura(+Segundo, +Kw, -Lab, -Ofi)
+reparto_lectura(Seg, Kw, Lab, Ofi) :-
+    horario(oficinas, InicioOfi, FinOfi),
+    equipo_base(laboratorio, Base),
+    ( Seg >= InicioOfi, Seg =< FinOfi ->
+        % Dentro del horario de oficinas
+        KwVariable is max(0, Kw - Base),
+        carga_declarada(laboratorio, PctLab),
+        carga_declarada(oficinas, PctOfi),
+        Lab is Base + KwVariable * PctLab,
+        Ofi is KwVariable * PctOfi
+    ;   % Fuera del horario de oficinas, todo es del lab
+        Lab = Kw,
+        Ofi = 0
+    ).
+
+% reparto_energia(-Lab, -Ofi, -Regla, -Certeza)
+reparto_energia(TotalLab, TotalOfi, Regla, estimacion) :-
+    findall(Seg-Kw, lectura(p2_compartido, kw, Kw, Seg), Lecturas),
+    limite(ventana_s, VentanaDuracion),
+    EnergiaVentana is VentanaDuracion / 3600,  % 0.25 kWh por ventana de 15 min
+    calcular_reparto_total(Lecturas, 0, 0, EnergiaVentana, TotalLab, TotalOfi),
+    Regla = 'Fuera de horario oficinas: 100% lab; dentro: base 1.5 kW lab + variable 30/70'.
+
+% calcular_reparto_total(+Lecturas, +AcumLab, +AcumOfi, +EnergiaVentana, -TotalLab, -TotalOfi)
+calcular_reparto_total([], Lab, Ofi, _, Lab, Ofi).
+calcular_reparto_total([Seg-Kw|Rest], AcumLab, AcumOfi, Ev, TotalLab, TotalOfi) :-
+    reparto_lectura(Seg, Kw, KwLab, KwOfi),
+    NuevoLab is AcumLab + KwLab * Ev,
+    NuevoOfi is AcumOfi + KwOfi * Ev,
+    calcular_reparto_total(Rest, NuevoLab, NuevoOfi, Ev, TotalLab, TotalOfi).
+
+% ventana_maxima(+Medidor, -Segundo, -Kw)
+ventana_maxima(M, SegMax, KwMax) :-
+    findall(Kw-Seg, lectura(M, kw, Kw, Seg), Pares),
+    sort(Pares, Ordenados),
+    reverse(Ordenados, [KwMax-SegMax|_]).
+
+% reparto_demanda(-Lab, -Ofi, -PctLab, -PctOfi, -VentanaSeg)
+reparto_demanda(Lab, Ofi, PctLab, PctOfi, VentanaSeg) :-
+    ventana_maxima(p2_compartido, VentanaSeg, KwMax),
+    reparto_lectura(VentanaSeg, KwMax, Lab, Ofi),
+    Total is Lab + Ofi,
+    PctLab is (Lab / Total) * 100,
+    PctOfi is (Ofi / Total) * 100.
+
+% consumo_nocturno(+Area, -Estado, -Explicacion)
+consumo_nocturno(Area, Estado, Explicacion) :-
+    horario(Area, Inicio, _),
+    equipo_base(Area, Base),
+    limite(tolerancia_nocturna, Factor),
+    Tolerancia is Base * Factor,
+    TInicioNoche is Inicio - 3600,
+    ( lectura(p2_compartido, kw, KwNoche, SNoche),
+      SNoche >= 0, SNoche < TInicioNoche,
+      ( KwNoche =< Tolerancia ->
+          Estado = esperado,
+          Explicacion = [base(Base), medido(KwNoche), tolerancia(Tolerancia)]
+      ;   Estado = anomalia,
+          Explicacion = [base(Base), medido(KwNoche), tolerancia(Tolerancia), excede(KwNoche - Tolerancia)]
+      )
+    ;   Estado = no_se,
+        Explicacion = [sin_datos_nocturnos]
+    ).
+
+% factor_potencia(+Medidor, +Segundo, -Fp, -Penaliza)
+factor_potencia(M, Seg, Fp, Penaliza) :-
+    lectura(M, kw, Kw, Seg),
+    lectura(M, kvar, Kvar, Seg),
+    Kva is sqrt(Kw * Kw + Kvar * Kvar),
+    ( Kva > 0 ->
+        Fp is Kw / Kva,
+        limite(fp_minimo, FpMin),
+        ( Fp < FpMin ->
+            Penaliza = si
+        ;   Penaliza = no
+        )
+    ;   Fp = 1.0,
+        Penaliza = no
+    ).
+
+% se_le_falla_a(-Area, -SiPasaQue)
+se_le_falla_a(laboratorio, 'Si la base real del lab es menor, paga de mas').
+se_le_falla_a(laboratorio, 'Si las oficinas dejan equipos de noche, el lab paga ese consumo').
+se_le_falla_a(oficinas, 'Si la carga declarada de oficinas esta inflada en la demanda').
+
 % Stubs temporales (se implementaran en las siguientes fases)
-caida_voltaje(_, _) :- fail.
-causa_caida(_, _, _, _, _) :- fail.
-reparto_lectura(_, _, _, _) :- fail.
-reparto_energia(_, _, _, _) :- fail.
-ventana_maxima(_, _, _) :- fail.
-reparto_demanda(_, _, _, _, _) :- fail.
-consumo_nocturno(_, _, _) :- fail.
-factor_potencia(_, _, _, _) :- fail.
-se_le_falla_a(_, _) :- fail.
 decide(_, _, _) :- fail.
 situacion(_, _, _) :- fail.
 que_falta(_, _) :- fail.

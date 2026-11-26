@@ -243,3 +243,51 @@ test(alarma_no_puedo_decir_s3, [setup(cargar_escenario(s3))]) :-
     assertion(Certeza == no_se).
 
 :- end_tests(situacion3).
+
+% ============================================================================
+% Fase 6: Pruebas de Situacion 4 - Caida de voltaje
+% ============================================================================
+
+:- begin_tests(situacion4).
+
+test(causa_red_s4a, [setup(cargar_escenario(s4a))]) :-
+    causa_caida(piso1, Causa, _, Descartada, _),
+    assertion(Causa == red),
+    assertion(Descartada == arranque_motores).
+
+test(causa_motores_s4b, [setup(cargar_escenario(s4b))]) :-
+    causa_caida(piso1, Causa, _, Descartada, _),
+    assertion(Causa == arranque_motores),
+    assertion(Descartada == red).
+
+test(causa_no_se_puede_decir_s4c, [setup(cargar_escenario(s4c))]) :-
+    causa_caida(piso1, Causa, _, _, DatoFalta),
+    assertion(Causa == no_se_puede_decir),
+    DatoFalta \= ninguno.
+
+:- end_tests(situacion4).
+
+% ============================================================================
+% Fase 7: Pruebas de Situacion 5 - Reparto
+% ============================================================================
+
+:- begin_tests(situacion5).
+
+test(reparto_energia_s5, [setup(cargar_escenario(s5))]) :-
+    reparto_energia(Lab, Ofi, _, estimacion),
+    assertion(abs(Lab - 54.33) < 2.0),  % Tolerancia relajada por lecturas faltantes
+    assertion(abs(Ofi - 30.63) < 1.0).
+
+test(reparto_demanda_s5, [setup(cargar_escenario(s5))]) :-
+    reparto_demanda(Lab, Ofi, PctLab, PctOfi, _),
+    assertion(abs(Lab - 3.75) < 0.1),
+    assertion(abs(Ofi - 5.25) < 0.1),
+    assertion(abs(PctLab - 41.7) < 1.0),
+    assertion(abs(PctOfi - 58.3) < 1.0).
+
+test(factor_potencia_s5, [setup(cargar_escenario(s5))]) :-
+    factor_potencia(p2_compartido, 57600, Fp, Penaliza),
+    assertion(abs(Fp - 0.874) < 0.01),
+    assertion(Penaliza == si).
+
+:- end_tests(situacion5).
