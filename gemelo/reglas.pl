@@ -590,8 +590,148 @@ se_le_falla_a(laboratorio, 'Si la base real del lab es menor, paga de mas').
 se_le_falla_a(laboratorio, 'Si las oficinas dejan equipos de noche, el lab paga ese consumo').
 se_le_falla_a(oficinas, 'Si la carga declarada de oficinas esta inflada en la demanda').
 
-% Stubs temporales (se implementaran en las siguientes fases)
-decide(_, _, _) :- fail.
-situacion(_, _, _) :- fail.
-que_falta(_, _) :- fail.
-hipotesis(_, _, _, _) :- fail.
+% ============================================================================
+% Fase 8: Contrato - decide, situacion, que_falta, hipotesis
+% ============================================================================
+
+% decide(+Entidad, -Decision, -Explicacion)
+decide(ventana, Decision, Explicacion) :-
+    alarma_demanda(Tipo, Margen, Certeza, Expl),
+    ( member(Tipo, [anticipada, vigente]) ->
+        ( diferir(Motor, Hasta, Area) ->
+            Decision = alarma(Tipo, Margen, Certeza, recomendar_diferir(Motor, Hasta, Area)),
+            Explicacion = Expl
+        ;   Decision = alarma(Tipo, Margen, Certeza, sin_solucion),
+            Explicacion = Expl
+        )
+    ;   Decision = alarma(Tipo, Margen, Certeza, ninguna_accion),
+        Explicacion = Expl
+    ).
+
+decide(M, Decision, Explicacion) :-
+    medidor(M, _, _, _),
+    ( aislar(M, ExplAislar) ->
+        Decision = aislar(causante),
+        Explicacion = ExplAislar
+    ; victima(M, Causante) ->
+        Decision = victima_de(Causante),
+        Explicacion = [victima(M), causante(Causante)]
+    ; fresca(M, kw, si) ->
+        Decision = estado(fresco),
+        valor(M, kw, conocido(Kw)),
+        edad(M, Edad),
+        Explicacion = [medidor(M), kw(Kw), edad_s(Edad)]
+    ; fresca(M, kw, no) ->
+        Decision = estado(viejo),
+        edad(M, Edad),
+        Explicacion = [medidor(M), edad_s(Edad), supera_limite]
+    ;   Decision = estado(sin_dato),
+        Explicacion = [medidor(M), sin_lecturas]
+    ).
+
+decide(Piso, Decision, Explicacion) :-
+    member(Piso, [piso1, piso2, piso3]),
+    causa_caida(Piso, Causa, Ev, Desc, Dato),
+    ( Causa \= sin_caida ->
+        Decision = caida(Causa),
+        Explicacion = [causa(Causa), evidencia(Ev), descartada(Desc), dato_falta(Dato)]
+    ;   consumo_piso(Piso, 0, 86400, R, Sustento),
+        Decision = consumo(R),
+        Explicacion = [piso(Piso), sustento(Sustento)]
+    ).
+
+decide(Bus, Decision, Explicacion) :-
+    member(Bus, [bus_a, bus_b]),
+    ( causante_bus(Bus, M, Expl) ->
+        Decision = causante(M),
+        Explicacion = Expl
+    ;   Decision = sin_problema,
+        Explicacion = [bus(Bus), normal]
+    ).
+
+decide(Area, Decision, Explicacion) :-
+    member(Area, [laboratorio, oficinas]),
+    reparto_energia(Lab, Ofi, Regla, Certeza),
+    ( Area == laboratorio ->
+        Decision = reparto(Lab, kwh, Certeza),
+        Explicacion = [area(laboratorio), energia(Lab), regla(Regla)]
+    ;   Decision = reparto(Ofi, kwh, Certeza),
+        Explicacion = [area(oficinas), energia(Ofi), regla(Regla)]
+    ).
+
+% situacion(?Entidad, ?Situacion, -Evidencia)
+situacion(ventana, rebase_proyectado, Ev) :-
+    alarma_demanda(anticipada, _, _, Ev).
+situacion(ventana, rebase_vigente, Ev) :-
+    alarma_demanda(vigente, _, _, Ev).
+situacion(M, contador_reiniciado, Ev) :-
+    salto_contador(M, reinicio, Ev).
+situacion(M, contador_desbordado, Ev) :-
+    salto_contador(M, desbordamiento, Ev).
+situacion(M, dato_corrupto, Ev) :-
+    salto_contador(M, dato_corrupto, Ev).
+situacion(M, medidor_lento, Ev) :-
+    lento(M, si),
+    Ev = [medidor(M)].
+situacion(M, lectura_atrasada, Ev) :-
+    medidor(M, _, _, _),
+    ( fresca(M, kw, no) ; victima(M, _) ),
+    ( ultima_lectura(M, kw, _, SegLec) ->
+        ahora(Ahora),
+        Edad is Ahora - SegLec,
+        Ev = [medidor(M), edad_lectura(Edad)]
+    ;   Ev = [medidor(M), sin_lectura]
+    ).
+situacion(Piso, caida_por_arranque, Ev) :-
+    causa_caida(Piso, arranque_motores, Ev, _, _).
+situacion(Piso, caida_de_red, Ev) :-
+    causa_caida(Piso, red, Ev, _, _).
+situacion(Area, consumo_nocturno_esperado, Ev) :-
+    consumo_nocturno(Area, esperado, Ev).
+situacion(Area, consumo_nocturno_anomalo, Ev) :-
+    consumo_nocturno(Area, anomalia, Ev).
+
+% que_falta(+Entidad, -Cambios)
+que_falta(ventana, Cambios) :-
+    alarma_demanda(Tipo, Margen, _, _),
+    ( member(Tipo, [anticipada, vigente]) ->
+        KwReducir is -Margen + 0.1,
+        findall(Motor-Ahorro, 
+                (motor(Motor, _, Potencia, _),
+                 ventana_actual(_, Fin),
+                 ahora(Ahora),
+                 TiempoMotor is Fin - Ahora,
+                 Ahorro is (Potencia * TiempoMotor) / 900),
+                Opciones),
+        Cambios = [reducir_kw(KwReducir), opciones_diferir(Opciones)]
+    ;   Cambios = [ninguno]
+    ).
+
+que_falta(M, Cambios) :-
+    medidor(M, _, _, _),
+    fresca(M, kw, no),
+    Cambios = [lectura_fresca_de(M)].
+
+que_falta(Piso, Cambios) :-
+    causa_caida(Piso, no_se_puede_decir, _, _, DatoFalta),
+    Cambios = [dato_faltante(DatoFalta)].
+
+% hipotesis(+Cambio, +Entidad, -Decision, -Explicacion)
+hipotesis(mover(Motor, Retraso), ventana, Decision, Explicacion) :-
+    evento(Motor, arranque_previsto, TOriginal),
+    TNuevo is TOriginal + Retraso,
+    setup_call_cleanup(
+        (retract(evento(Motor, arranque_previsto, TOriginal)),
+         assertz(evento(Motor, arranque_previsto, TNuevo))),
+        decide(ventana, Decision, Explicacion),
+        (retract(evento(Motor, arranque_previsto, TNuevo)),
+         assertz(evento(Motor, arranque_previsto, TOriginal)))
+    ).
+
+hipotesis(quitar(Motor), ventana, Decision, Explicacion) :-
+    evento(Motor, arranque_previsto, TOriginal),
+    setup_call_cleanup(
+        retract(evento(Motor, arranque_previsto, TOriginal)),
+        decide(ventana, Decision, Explicacion),
+        assertz(evento(Motor, arranque_previsto, TOriginal))
+    ).

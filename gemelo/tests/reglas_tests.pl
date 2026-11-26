@@ -291,3 +291,39 @@ test(factor_potencia_s5, [setup(cargar_escenario(s5))]) :-
     assertion(Penaliza == si).
 
 :- end_tests(situacion5).
+
+% ============================================================================
+% Fase 8: Pruebas del Contrato y las 5 preguntas
+% ============================================================================
+
+:- begin_tests(contrato).
+
+% Cinco preguntas de "Por que no basta un script"
+test(pregunta1_que_hago_con_ventana, [setup(cargar_escenario(s1b))]) :-
+    decide(ventana, D, _),
+    D = alarma(anticipada, _, _, _).
+
+test(pregunta2_por_que_no_avisa_motores, [setup(cargar_escenario(s3))]) :-
+    decide(p1_motores, D, E),
+    D = victima_de(p1_general),
+    member(causante(p1_general), E).
+
+test(pregunta3_cuales_lecturas_viejas, [setup(cargar_escenario(s3))]) :-
+    findall(M, situacion(M, lectura_atrasada, _), Lista),
+    sort(Lista, Ordenada),
+    assertion(member(p1_alumbrado, Ordenada)).
+
+test(pregunta4_que_tendria_que_cambiar, [setup(cargar_escenario(s1b))]) :-
+    que_falta(ventana, C),
+    member(reducir_kw(_), C).
+
+test(pregunta5_que_pasaria_si_mover_compresor, [setup(cargar_escenario(s1b))]) :-
+    hipotesis(mover(compresor, 600), ventana, D, _),
+    D = alarma(ninguna, _, _, _).
+
+% Pruebas de situacion libre
+test(situacion_libre, [setup(cargar_escenario(s3))]) :-
+    situacion(p1_general, medidor_lento, _),
+    situacion(p1_alumbrado, lectura_atrasada, _).
+
+:- end_tests(contrato).
