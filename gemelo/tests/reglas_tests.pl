@@ -117,3 +117,57 @@ test(segundo_a_hora) :-
     assertion(H4 == '23:59').
 
 :- end_tests(base).
+
+% ============================================================================
+% Fase 3: Pruebas de Situacion 1 - Pico futuro
+% ============================================================================
+
+:- begin_tests(situacion1).
+
+test(ventana_s1a, [setup(cargar_escenario(s1a))]) :-
+    ventana_actual(Inicio, Fin),
+    assertion(Inicio == 43200),
+    assertion(Fin == 44100).
+
+test(acumulado_s1a, [setup(cargar_escenario(s1a))]) :-
+    acumulado_ventana(KwS, Faltantes),
+    Esperado is 70 * 30 + 25 * 90,
+    assertion(abs(KwS - Esperado) < 0.1),
+    assertion(Faltantes == []).
+
+test(proyeccion_s1a_ninguna, [setup(cargar_escenario(s1a))]) :-
+    proyeccion([], Promedio, Certeza, _),
+    assertion(abs(Promedio - 26.5) < 0.1),
+    assertion(Certeza == firme).
+
+test(alarma_s1a_ninguna, [setup(cargar_escenario(s1a))]) :-
+    alarma_demanda(Tipo, Margen, Certeza, _),
+    assertion(Tipo == ninguna),
+    assertion(abs(Margen - 13.5) < 0.1),
+    assertion(Certeza == firme).
+
+test(acumulado_s1b_con_faltante, [setup(cargar_escenario(s1b))]) :-
+    acumulado_ventana(KwS, Faltantes),
+    Esperado is 36 * 660,
+    assertion(abs(KwS - Esperado) < 0.1),
+    assertion(Faltantes == [43500]).
+
+test(alarma_s1b_anticipada, [setup(cargar_escenario(s1b))]) :-
+    alarma_demanda(Tipo, Margen, Certeza, Expl),
+    assertion(Tipo == anticipada),
+    assertion(Margen < 0),  % Margen negativo = rebasamos
+    assertion(abs(Margen - (-0.57)) < 0.1),
+    assertion(Certeza == estimacion),
+    member(lecturas_faltantes([43500]), Expl).
+
+test(diferir_s1b_compresor, [setup(cargar_escenario(s1b))]) :-
+    diferir(Motor, Hasta, Area),
+    assertion(Motor == compresor),
+    assertion(Hasta == 44100),
+    assertion(Area == taller).
+
+test(proyeccion_sin_compresor_s1b, [setup(cargar_escenario(s1b))]) :-
+    proyeccion([compresor], Promedio, _, _),
+    assertion(abs(Promedio - 38.37) < 0.1).
+
+:- end_tests(situacion1).

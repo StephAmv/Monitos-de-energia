@@ -113,12 +113,150 @@ segundo_del_dia_a_hora(S, Texto) :-
     M is (S mod 3600) // 60,
     format(atom(Texto), '~|~`0t~d~2+:~|~`0t~d~2+', [H, M]).
 
+% ============================================================================
+% Fase 3: Situacion 1 - Pico futuro
+% ============================================================================
+
+% ventana_actual(-Inicio, -Fin): ventana de demanda actual
+ventana_actual(Inicio, Fin) :-
+    ahora(Ahora),
+    limite(ventana_s, Duracion),
+    Inicio is (Ahora // Duracion) * Duracion,
+    Fin is Inicio + Duracion.
+
+% acumulado_ventana(-KwS, -Faltantes): acumulado en kW·s y segundos faltantes
+acumulado_ventana(KwS, Faltantes) :-
+    ventana_actual(Inicio, Fin),
+    ahora(Ahora),
+    limite(ciclo_s, Ciclo),
+    findall(Seg, (between(0, 1000, N), Seg is Inicio + N * Ciclo, Seg < Ahora), Segundos),
+    acumular_lecturas(Segundos, 0, 0, [], KwS, Faltantes).
+
+% acumular_lecturas(+Segundos, +Acum, +UltimoValor, +Faltantes, -Total, -ListaFaltantes)
+acumular_lecturas([], Acum, _, Faltantes, Acum, Faltantes).
+acumular_lecturas([S|Ss], Acum, UltimoV, Falt, Total, TotalFalt) :-
+    limite(ciclo_s, Ciclo),
+    ( lectura(acometida, kw, V, S) ->
+        NuevoAcum is Acum + V * Ciclo,
+        acumular_lecturas(Ss, NuevoAcum, V, Falt, Total, TotalFalt)
+    ; UltimoV > 0 ->
+        % Rellena con el ultimo valor conocido
+        NuevoAcum is Acum + UltimoV * Ciclo,
+        acumular_lecturas(Ss, NuevoAcum, UltimoV, [S|Falt], Total, TotalFalt)
+    ;   % Sin valor previo, usa 0
+        acumular_lecturas(Ss, Acum, 0, [S|Falt], Total, TotalFalt)
+    ).
+
+% proyeccion(+Excluidos, -Promedio, -Certeza, -Explicacion)
+proyeccion(Excluidos, Promedio, Certeza, Explicacion) :-
+    acumulado_ventana(Acumulado, Faltantes),
+    ventana_actual(Inicio, Fin),
+    ahora(Ahora),
+    Restante is Fin - Ahora,
+    
+    % Potencia base actual
+    valor(acometida, kw, R),
+    ( R = conocido(KwActual) ->
+        KwBase = KwActual
+    ;   KwBase = 0
+    ),
+    
+    % Contribucion de la base
+    EsperadoBase is KwBase * Restante,
+    
+    % Contribucion de los motores previstos
+    findall(
+        Contrib,
+        (   motor(Motor, _, Potencia, _),
+            \+ member(Motor, Excluidos),
+            evento(Motor, arranque_previsto, TArranque),
+            TArranque >= Ahora,
+            TArranque < Fin,
+            TiempoMotor is Fin - TArranque,
+            Contrib is Potencia * TiempoMotor
+        ),
+        Contribuciones
+    ),
+    sumlist(Contribuciones, EsperadoMotores),
+    
+    Esperado is EsperadoBase + EsperadoMotores,
+    Total is Acumulado + Esperado,
+    limite(ventana_s, Duracion),
+    Promedio is Total / Duracion,
+    
+    ( Faltantes == [] ->
+        Certeza = firme
+    ;   Certeza = estimacion
+    ),
+    
+    Explicacion = [
+        acumulado(Acumulado),
+        restante_s(Restante),
+        kw_actual(KwBase),
+        esperado_motores(EsperadoMotores),
+        promedio_proyectado(Promedio),
+        lecturas_faltantes(Faltantes)
+    ].
+
+% alarma_demanda(-Tipo, -Margen, -Certeza, -Explicacion)
+alarma_demanda(Tipo, Margen, Certeza, Explicacion) :-
+    acumulado_ventana(Acumulado, Faltantes),
+    limite(ventana_s, Duracion),
+    PromedioAcumulado is Acumulado / Duracion,
+    limite(demanda, Limite),
+    proyeccion([], Proyectado, _, ExplProy),
+    
+    % Verificar si necesitamos lecturas de motores
+    valor(p1_motores, kw, RMotores),
+    findall(Pot, motor(_, _, Pot, _), Potencias),
+    sumlist(Potencias, TotalMotores),
+    
+    ( RMotores = desconocido(_),
+      Proyectado - Limite < TotalMotores,
+      Proyectado - Limite > -TotalMotores ->
+        % No podemos decidir porque los motores podrian cambiar el resultado
+        Tipo = no_puedo_decir,
+        Margen is Limite - Proyectado,
+        Certeza = no_se,
+        Explicacion = [margen_insuficiente(Margen), potencia_motores_desconocida(TotalMotores) | ExplProy]
+    ; PromedioAcumulado >= Limite ->
+        Tipo = vigente,
+        Margen is Limite - Proyectado,
+        ( Faltantes == [] -> Certeza = firme ; Certeza = estimacion ),
+        Explicacion = [tipo(vigente), limite(Limite) | ExplProy]
+    ; Proyectado >= Limite ->
+        Tipo = anticipada,
+        Margen is Limite - Proyectado,
+        ( Faltantes == [] -> Certeza = firme ; Certeza = estimacion ),
+        Explicacion = [tipo(anticipada), limite(Limite) | ExplProy]
+    ;   Tipo = ninguna,
+        Margen is Limite - Proyectado,
+        ( Faltantes == [] -> Certeza = firme ; Certeza = estimacion ),
+        Explicacion = [tipo(ninguna), limite(Limite) | ExplProy]
+    ).
+
+% diferir(-Motor, -Hasta, -SeLeFallaA)
+diferir(Motor, Hasta, Area) :-
+    alarma_demanda(Tipo, _, _, _),
+    member(Tipo, [anticipada, vigente]),
+    ventana_actual(_, Fin),
+    Hasta = Fin,
+    
+    % Probar motores por prioridad (mayor prioridad = menor numero)
+    findall(Pr-M, motor(M, _, _, Pr), Pares),
+    sort(Pares, Ordenados),
+    reverse(Ordenados, [_-Motor|_]),
+    
+    % Verificar que sin este motor no rebasa
+    proyeccion([Motor], Proy, _, _),
+    limite(demanda, Limite),
+    Proy < Limite,
+    
+    % Area del motor
+    motor(Motor, Medidor, _, _),
+    area(Area, Medidor).
+
 % Stubs temporales (se implementaran en las siguientes fases)
-ventana_actual(_, _) :- fail.
-acumulado_ventana(_, _) :- fail.
-proyeccion(_, _, _, _) :- fail.
-alarma_demanda(_, _, _, _) :- fail.
-diferir(_, _, _) :- fail.
 salto_contador(_, _, _) :- fail.
 consumo_medidor(_, _, _, _) :- fail.
 consumo_piso(_, _, _, _) :- fail.
