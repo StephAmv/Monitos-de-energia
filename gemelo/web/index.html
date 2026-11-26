@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#060d1a">
+  <title>Gemelo digital — Monitor de energía</title>
+  <!-- Sin dependencias externas: nada de Tailwind CDN ni Google Fonts (fallaban en WSL/VM) -->
+  <link rel="stylesheet" href="/web/estilos.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230a1526'/%3E%3Cpath d='M13 3 5 14h6l-1 7 8-11h-6z' fill='%2310b981'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- Iconos (SVG en linea, reemplazan a Material Symbols) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-rayo" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 16v-4M12 16V8M16 16v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-medidor" viewBox="0 0 24 24"><path d="M4.5 17a8 8 0 1 1 15 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m12 13 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="13" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-alarma" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-reparto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v9l6.4 6.4M12 12H3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-matraz" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7.5 15h9" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-foco" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-cerebro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-pregunta" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 8.5 5 3.5-5 3.5z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m9 9 6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-flechas" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-balanza" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 7h14M5 7l-3 6a3 3 0 0 0 6 0L5 7zM19 7l-3 6a3 3 0 0 0 6 0l-3-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-red" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="2.5" y="16.5" width="6" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="15.5" y="16.5" width="6" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5v4.5M5.5 16.5V12h13v4.5" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- Barra superior -->
+  <header class="topbar">
+    <div class="marca">
+      <span class="marca-logo"><svg><use href="#i-rayo"/></svg></span>
+      <div>
+        <div class="marca-titulo">Gemelo digital <span class="sep">—</span> Monitor de energía</div>
+        <div class="marca-sub">
+          <span class="etiqueta-mono">Campus Tijuana · Edificio 3 pisos · 7 medidores</span>
+          <span id="conexion" class="conexion"><i class="punto"></i><span>Conectando…</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-der">
+      <label class="selector-escenario">
+        <span class="etiqueta-mono">Escenario</span>
+        <select id="escenario" aria-label="Escenario"></select>
+      </label>
+      <div class="reloj-modelo" title="Instante del modelo (hecho ahora/1)">
+        <span class="etiqueta-mono">Ahora</span><b id="ahora">—</b>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navegacion lateral (escritorio) / inferior (celular) -->
+  <nav class="nav" aria-label="Secciones">
+    <div class="nav-titulo etiqueta-mono">Supervisión</div>
+    <a href="#panel" data-vista="panel" class="activo"><svg><use href="#i-panel"/></svg><span>Panel</span></a>
+    <a href="#medidores" data-vista="medidores"><svg><use href="#i-medidor"/></svg><span>Medidores</span></a>
+    <a href="#alarmas" data-vista="alarmas"><svg><use href="#i-alarma"/></svg><span>Alarmas</span><em id="badge-alarmas" class="badge oculto">0</em></a>
+    <a href="#reparto" data-vista="reparto"><svg><use href="#i-reparto"/></svg><span>Reparto</span></a>
+    <div class="nav-pie" id="nav-pisos"></div>
+  </nav>
+
+  <main class="contenido">
+
+    <!-- ===================== PANEL ===================== -->
+    <section id="vista-panel" class="vista activa">
+      <div class="encabezado">
+        <div>
+          <div class="ceja">Ventana de demanda · CFE 15 min</div>
+          <h1>Panel</h1>
+        </div>
+        <p class="encabezado-nota">Todo lo que ves lo decide el gemelo en Prolog. La interfaz solo pregunta y muestra.</p>
+      </div>
+
+      <div class="rejilla-panel">
+        <div class="columna">
+          <article class="tarjeta tarjeta-hero">
+            <div class="hero-cabeza">
+              <div>
+                <div class="ceja"><svg class="ico-s"><use href="#i-rayo"/></svg> Ventana en curso</div>
+                <h2>Ventana de demanda cuartohoraria</h2>
+              </div>
+              <div class="chips" id="chips-ventana"></div>
+            </div>
+
+            <div class="progreso-ventana">
+              <div class="pv-fila">
+                <span>Ventana <b id="pv-rango">—</b></span>
+                <span id="pv-restante" class="mono"></span>
+              </div>
+              <div class="barra"><i id="pv-barra"></i></div>
+            </div>
+
+            <div class="metricas-2">
+              <div class="metrica" id="m-acum">
+                <div class="metrica-cabeza"><span>Lo acumulado (promedio)</span></div>
+                <div class="metrica-valor"><b id="v-acum">—</b><small>kW</small></div>
+                <div class="metrica-pie mono" id="v-acum-pie"></div>
+              </div>
+              <div class="metrica" id="m-proy">
+                <div class="metrica-cabeza"><span>Cierre proyectado</span><span class="chip" id="chip-proy"></span></div>
+                <div class="metrica-valor"><b id="v-proy">—</b><small>kW</small><span class="contra mono">/ lím <b id="v-lim">—</b> kW</span></div>
+                <div class="metrica-pie mono" id="v-margen"></div>
+              </div>
+            </div>
+
+            <div class="medidor-limite">
+              <div class="ml-pista"><i id="ml-acum"></i><i id="ml-proy"></i><b id="ml-lim"></b></div>
+              <div class="ml-leyenda mono"><span><i class="c-acum"></i>Acumulado</span><span><i class="c-proy"></i>Proyección</span><span><i class="c-lim"></i>Límite</span></div>
+            </div>
+
+            <div class="aviso-faltantes oculto" id="faltantes"></div>
+          </article>
+
+          <article class="tarjeta recomendacion oculto" id="recomendacion">
+            <span class="rec-ico"><svg><use href="#i-flechas"/></svg></span>
+            <div class="rec-texto">
+              <div class="ceja ceja-ambar">Recomendación del gemelo</div>
+              <h3 id="rec-titulo"></h3>
+              <p id="rec-detalle"></p>
+            </div>
+          </article>
+
+          <article class="tarjeta">
+            <div class="tarjeta-cabeza">
+              <h3><svg class="ico"><use href="#i-cerebro"/></svg> ¿Por qué decide esto el gemelo?</h3>
+              <span class="etiqueta-mono" id="n-factores"></span>
+            </div>
+            <ol class="explicacion" id="explicacion"></ol>
+            <div class="que-falta">
+              <button class="btn btn-sec" id="btn-que-falta"><svg class="ico"><use href="#i-pregunta"/></svg> ¿Qué falta para que cambie?</button>
+              <ul class="lista-cambios oculto" id="que-falta"></ul>
+            </div>
+          </article>
+        </div>
+
+        <aside class="columna">
+          <article class="tarjeta">
+            <div class="tarjeta-cabeza">
+              <h3><svg class="ico"><use href="#i-matraz"/></svg> ¿Qué pasaría si…?</h3>
+            </div>
+            <p class="texto-suave">Mueve el arranque de un motor y el gemelo vuelve a razonar con las mismas reglas.</p>
+            <div class="etiqueta-mono mt">Motor</div>
+            <div class="opciones" id="opt-motor">
+              <label><input type="radio" name="motor" value="compresor" checked><span>Compresor</span><em>taller</em></label>
+              <label><input type="radio" name="motor" value="bomba"><span>Bomba de cisterna</span><em>taller</em></label>
+              <label><input type="radio" name="motor" value="extractor"><span>Extractor</span><em>taller</em></label>
+            </div>
+            <div class="fila-entre mt"><span class="etiqueta-mono">Retraso</span><b class="mono acento" id="lbl-retraso">10 min</b></div>
+            <div class="segmentado" id="seg-retraso">
+              <button data-min="5">5 min</button><button data-min="10" class="activo">10 min</button><button data-min="15">15 min</button><button data-min="30">30 min</button>
+            </div>
+            <button class="btn btn-primario ancho mt" id="btn-hipotesis"><svg class="ico"><use href="#i-play"/></svg> Probar hipótesis</button>
+            <div class="comparacion oculto" id="hipotesis">
+              <div class="comp-caja"><span class="etiqueta-mono">Sin cambio</span><b id="h-antes">—</b></div>
+              <div class="comp-caja"><span class="etiqueta-mono">Con cambio</span><b id="h-despues">—</b></div>
+              <ol class="explicacion compacta" id="h-explicacion"></ol>
+            </div>
+          </article>
+
+          <article class="tarjeta">
+            <div class="tarjeta-cabeza"><h3><svg class="ico"><use href="#i-red"/></svg> Pisos</h3></div>
+            <div class="lista-pisos" id="lista-pisos"></div>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== MEDIDORES ===================== -->
+    <section id="vista-medidores" class="vista">
+      <div class="encabezado">
+        <div>
+          <div class="ceja">RS-485 · consulta cada 5 s · uno por uno</div>
+          <h1>Medidores y buses</h1>
+        </div>
+        <div class="leyenda">
+          <span><i class="ok"></i>Normal</span><span><i class="warn"></i>Víctima</span><span><i class="bad"></i>Causante</span><span><i class="unk"></i>No sé</span>
+        </div>
+      </div>
+
+      <article class="tarjeta">
+        <div class="tarjeta-cabeza"><h3><svg class="ico"><use href="#i-red"/></svg> Topología eléctrica</h3><span class="etiqueta-mono">aguas arriba → aguas abajo</span></div>
+        <div class="arbol" id="arbol"></div>
+      </article>
+
+      <div class="rejilla-2" id="buses"></div>
+
+      <article class="tarjeta sin-relleno">
+        <div class="tabla-envoltura">
+          <table class="tabla" id="tabla-medidores">
+            <thead><tr><th>Medidor</th><th>Piso</th><th>Bus · turno</th><th class="der">Retraso</th><th class="der">Edad lectura</th><th class="der">Voltaje</th><th class="der">Potencia</th><th>Estado</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===================== ALARMAS ===================== -->
+    <section id="vista-alarmas" class="vista">
+      <div class="encabezado">
+        <div>
+          <div class="ceja">Diagnóstico causal · motor de reglas en Prolog</div>
+          <h1>Alarmas y situaciones deducidas</h1>
+        </div>
+        <div class="kpi-mini">
+          <div><span class="etiqueta-mono">Situaciones</span><b id="k-situaciones">—</b></div>
+        </div>
+      </div>
+
+      <div class="rejilla-alarmas">
+        <article class="tarjeta">
+          <div class="tarjeta-cabeza">
+            <h3><span class="ico-caja bad"><svg><use href="#i-rayo"/></svg></span> Análisis causal: caída de voltaje</h3>
+            <div class="segmentado chico" id="seg-piso">
+              <button data-piso="piso1" class="activo">Piso 1</button><button data-piso="piso2">Piso 2</button><button data-piso="piso3">Piso 3</button>
+            </div>
+          </div>
+          <div class="pasos-causa" id="causa"></div>
+        </article>
+
+        <aside>
+          <div class="tarjeta-cabeza suelta"><h3>Situaciones deducidas</h3><span class="chip unk" id="chip-n-sit"></span></div>
+          <div class="lista-situaciones" id="situaciones"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== REPARTO ===================== -->
+    <section id="vista-reparto" class="vista">
+      <div class="encabezado">
+        <div>
+          <div class="ceja">Piso 2 · medidor compartido</div>
+          <h1>Reparto: laboratorio y oficinas</h1>
+        </div>
+      </div>
+
+      <article class="tarjeta regla">
+        <span class="ico-caja"><svg><use href="#i-balanza"/></svg></span>
+        <div>
+          <div class="fila-chips"><span class="etiqueta-mono">Regla de reparto</span><span class="chip" id="chip-certeza-reparto"></span></div>
+          <p class="cita" id="regla"></p>
+        </div>
+      </article>
+
+      <div class="rejilla-reparto">
+        <article class="tarjeta">
+          <div class="tarjeta-cabeza"><h3>Energía vs. demanda máxima</h3>
+            <div class="leyenda"><span><i class="lab"></i>Laboratorio</span><span><i class="ofi"></i>Oficinas</span></div>
+          </div>
+          <div class="bloque-barras">
+            <div class="fila-entre"><span class="etiqueta-mono">1 · Energía del día</span><span class="mono texto-suave" id="tot-energia"></span></div>
+            <div class="barra-doble" id="barra-energia"></div>
+          </div>
+          <div class="bloque-barras">
+            <div class="fila-entre"><span class="etiqueta-mono">2 · Peso en la ventana de demanda máxima</span><span class="mono texto-suave" id="ventana-max"></span></div>
+            <div class="barra-doble" id="barra-demanda"></div>
+          </div>
+          <div class="nota-info" id="nota-divergencia"></div>
+        </article>
+
+        <aside class="columna">
+          <article class="tarjeta">
+            <div class="tarjeta-cabeza"><h3>Factor de potencia</h3><span class="chip" id="chip-fp"></span></div>
+            <div class="metrica-valor grande"><b id="fp">—</b><small id="fp-ref"></small></div>
+            <p class="texto-suave" id="fp-texto"></p>
+          </article>
+          <article class="tarjeta">
+            <div class="tarjeta-cabeza"><h3><svg class="ico"><use href="#i-luna"/></svg> Consumo nocturno</h3><span class="chip" id="chip-nocturno"></span></div>
+            <p class="texto-suave" id="nocturno-texto"></p>
+          </article>
+        </aside>
+      </div>
+
+      <article class="tarjeta riesgo">
+        <span class="ico-caja warn"><svg><use href="#i-alarma"/></svg></span>
+        <div>
+          <div class="etiqueta-mono">Si la regla se equivoca, ¿a quién se le falla?</div>
+          <ul class="lista-falla" id="se-le-falla"></ul>
+        </div>
+      </article>
+    </section>
+
+  </main>
+</div>
+
+<div id="toast" class="toast oculto" role="status"></div>
+
+<script src="/web/app.js"></script>
+</body>
+</html>

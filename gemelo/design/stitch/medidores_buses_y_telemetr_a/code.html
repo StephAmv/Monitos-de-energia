@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background-color:#060d1a;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          surface: "#060d1a",
+          "surface-panel": "#0c182d",
+          "surface-card": "#0f1f38",
+          "surface-card-hover": "#142745",
+          "surface-border": "#1b2e4b",
+          "text-main": "#f8fafc",
+          "text-muted": "#94a3b8",
+          "text-dim": "#64748b",
+          "brand-emerald": "#10b981",
+          "brand-amber": "#f59e0b",
+          "brand-red": "#ef4444",
+          "brand-slate": "#64748b",
+          "brand-accent": "#38bdf8"
+        },
+        fontFamily: {
+          sans: ["Inter", "sans-serif"],
+          mono: ["JetBrains Mono", "monospace"]
+        }
+      }
+    }
+  }
+</script></head><body class="bg-surface font-sans text-text-main antialiased selection:bg-brand-emerald/20 selection:text-brand-emerald"><header class="fixed top-0 left-0 right-0 z-50 h-16 bg-[#081220]/95 backdrop-blur border-b border-surface-border/60 px-4 lg:px-6 flex items-center justify-between gap-4"><div class="flex items-center gap-4 min-w-0"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded bg-brand-emerald/10 border border-brand-emerald/30 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-brand-emerald text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-semibold text-base text-text-main tracking-tight whitespace-nowrap">Gemelo digital — Monitor de energía</span><div class="flex items-center gap-2 mt-0.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-surface-card border border-surface-border text-brand-accent uppercase tracking-wider">Campus Tijuana — Edificio A (3 pisos)</span><span class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted"><span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-emerald shadow-[0_0_8px_#10b981]"></span>EN LÍNEA 100% TELEMETRÍA</span></div></div></div></div><div class="flex items-center gap-3"><div class="flex items-center gap-1.5 bg-[#0b172a] px-2.5 py-1 rounded border border-surface-border text-xs font-mono"><label class="text-text-muted uppercase text-[10px] hidden sm:inline" for="escenario-select">Escenario:</label><select class="bg-transparent text-text-main font-medium focus:outline-none cursor-pointer" id="escenario-select"><option class="bg-[#0b172a] text-text-main" value="normal">Normal</option><option class="bg-[#0b172a] text-text-main" value="pico-breve">Pico breve</option><option class="bg-[#0b172a] text-text-main" value="carga-sostenida">Carga sostenida</option><option class="bg-[#0b172a] text-text-main" value="contador">Contador</option><option class="bg-[#0b172a] text-text-main" value="medidor-lento">Medidor lento</option><option class="bg-[#0b172a] text-text-main" value="caida-red">Caída red</option><option class="bg-[#0b172a] text-text-main" value="caida-motores">Caída motores</option><option class="bg-[#0b172a] text-text-main" value="caida-sin-datos">Caída sin datos</option><option class="bg-[#0b172a] text-text-main" value="reparto">Reparto</option></select></div><div class="hidden xl:flex items-center gap-1.5 font-mono text-xs text-text-muted bg-[#0b172a] px-2.5 py-1 rounded border border-surface-border"><span class="material-symbols-outlined text-[15px] text-text-muted">schedule</span><span id="system-time">TIJ 11:42:08 PST</span></div><div class="w-8 h-8 rounded-full bg-surface-card border border-surface-border flex items-center justify-center shrink-0 text-text-muted hover:text-text-main transition-colors"><span class="material-symbols-outlined text-[18px]">person</span></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-64 bg-[#081220] border-r border-surface-border/60 z-40 hidden md:flex flex-col justify-between p-4"><div class="flex flex-col gap-4"><div class="px-2 pt-1"><span class="font-mono text-[10px] uppercase tracking-wider text-text-dim">Supervisión Operacional</span></div><nav class="flex flex-col gap-1"><a class="flex items-center gap-3 px-3 py-2 rounded text-text-muted hover:bg-surface-card hover:text-text-main transition-colors text-xs font-medium" data-path="panel" href="#"><span class="material-symbols-outlined text-[19px]">analytics</span><span>Panel</span></a><a aria-current="page" class="flex items-center gap-3 px-3 py-2 rounded bg-surface-card border border-surface-border/80 text-brand-emerald font-semibold transition-colors" data-path="medidores" href="#"><span class="material-symbols-outlined text-[19px] text-brand-emerald">speed</span><span>Medidores</span></a><a class="flex items-center gap-3 px-3 py-2 rounded text-text-muted hover:bg-surface-card hover:text-text-main transition-colors text-xs font-medium" data-path="alarmas" href="#"><span class="material-symbols-outlined text-[19px]">warning</span><span>Alarmas</span></a><a class="flex items-center gap-3 px-3 py-2 rounded text-text-muted hover:bg-surface-card hover:text-text-main transition-colors text-xs font-medium" data-path="reparto" href="#"><span class="material-symbols-outlined text-[19px]">pie_chart</span><span>Reparto</span></a></nav></div><div class="border-t border-surface-border/60 pt-4 flex flex-col gap-2 font-mono text-xs text-text-muted"><div class="flex justify-between items-center px-1"><span class="text-text-dim">P1: Taller &amp; Comunes</span><span class="text-text-main font-semibold">42.8 kW</span></div><div class="flex justify-between items-center px-1"><span class="text-text-dim">P2: Labs TI &amp; Chiller</span><span class="text-brand-red font-semibold">68.4 kW</span></div><div class="flex justify-between items-center px-1"><span class="text-text-dim">P3: Aulas &amp; HVAC</span><span class="text-text-main font-semibold">51.2 kW</span></div></div></aside><nav class="fixed bottom-0 left-0 right-0 h-14 bg-[#081220]/95 backdrop-blur border-t border-surface-border/60 z-40 flex md:hidden items-center justify-around px-2"><a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-muted text-xs" data-path="panel" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span>Panel</span></a><a aria-current="page" class="flex flex-col items-center justify-center py-1 px-3 rounded text-brand-emerald font-medium" data-path="medidores" href="#"><span class="material-symbols-outlined text-[20px]">speed</span><span>Medidores</span></a><a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-muted text-xs" data-path="alarmas" href="#"><span class="material-symbols-outlined text-[20px]">warning</span><span>Alarmas</span></a><a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-muted text-xs" data-path="reparto" href="#"><span class="material-symbols-outlined text-[20px]">pie_chart</span><span>Reparto</span></a></nav><div class="md:pl-64"><main class="w-full pt-20 pb-20 md:pb-8 min-h-screen bg-surface px-4 lg:px-6"><div class="flex flex-col w-full max-w-[1440px] mx-auto gap-4">
+<!-- Sub-barra técnica unificada y estilizada -->
+<div class="bg-surface-panel/80 border border-surface-border/60 px-4 py-2.5 rounded flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-brand-emerald shadow-[0_0_8px_#10b981]"></span>
+<span class="text-text-main font-medium uppercase tracking-wide">Topología Subestación A1 • 480/277V → 220/127V</span>
+</div>
+<div class="h-3 w-px bg-surface-border hidden sm:block"></div>
+<div class="flex items-center gap-1.5 text-text-muted">
+<span class="material-symbols-outlined text-[15px] text-brand-accent">sync</span>
+<span>Muestreo: 250ms</span>
+</div>
+<div class="flex items-center gap-1.5 text-text-muted">
+<span class="material-symbols-outlined text-[15px] text-brand-accent">speed</span>
+<span>Busbar Total: <strong class="text-text-main font-semibold">162.4 kW</strong> / 320 kW cap</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded bg-surface-card text-text-muted border border-surface-border">Pérdida en bus: 1.82%</span>
+<button class="px-2.5 py-1 bg-surface-card hover:bg-surface-card-hover border border-surface-border text-text-main rounded flex items-center gap-1.5 transition-colors" id="btn-refresh">
+<span class="material-symbols-outlined text-[15px] text-brand-accent">refresh</span>
+<span>Refrescar buses</span>
+</button>
+</div>
+</div>
+<!-- 1. Lienzo Unificado: Diagrama Unifilar en Modo Oscuro -->
+<section class="bg-surface-panel/90 border border-surface-border/70 rounded p-5 flex flex-col gap-4">
+<div class="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border/60 pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-brand-accent text-[20px]">account_tree</span>
+<h2 class="text-sm font-semibold text-text-main tracking-tight uppercase">Diagrama Unifilar y Cascada de Derivación</h2>
+</div>
+<div class="flex items-center gap-4 font-mono text-[11px] text-text-muted">
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>Salud Óptima</span>
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-amber"></span>Carga Crítica</span>
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-red"></span>Sobrecarga / Falla</span>
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-slate"></span>Sin Enlace</span>
+</div>
+</div>
+<div class="w-full overflow-x-auto py-3">
+<div class="min-w-[740px] flex flex-col items-center">
+<!-- Nodo Raíz: Acometida Principal -->
+<div class="relative flex flex-col items-center">
+<div class="bg-surface-card border border-surface-border/80 px-4 py-3 rounded w-80 shadow-lg shadow-black/20 flex items-center gap-3">
+<div class="w-9 h-9 rounded bg-[#0b172a] border border-brand-emerald/40 text-brand-emerald flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">electric_meter</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono text-[10px] text-text-dim uppercase tracking-wider">Acometida General Campus</span>
+<span class="text-xs font-semibold text-text-main truncate">TG-480/277V Principal</span>
+<div class="flex items-center gap-2 font-mono text-[11px] text-text-muted mt-0.5">
+<span class="text-text-main font-medium">479.2 V</span>
+<span class="text-text-dim">•</span>
+<span class="text-brand-accent font-medium">162.4 kW</span>
+<span class="text-text-dim">•</span>
+<span class="inline-flex items-center text-brand-emerald font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald mr-1"></span>ENLACE OK
+</span>
+</div>
+</div>
+</div>
+<!-- Conector vertical a la barra unifilar -->
+<div class="w-px h-6 bg-surface-border"></div>
+</div>
+<!-- Barra Colectora / Bifurcación Unifilar Horizontal -->
+<div class="relative w-11/12 max-w-4xl flex items-center justify-center">
+<div class="absolute top-0 left-[16.6%] right-[16.6%] h-px bg-surface-border"></div>
+<!-- Tres columnas de derivación -->
+<div class="grid grid-cols-3 w-full gap-4 pt-6">
+<!-- Rama Piso 1 -->
+<div class="flex flex-col items-center relative">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-surface-border"></div>
+<div class="w-full bg-surface-card border border-surface-border/70 p-3.5 rounded flex flex-col gap-1.5 hover:border-surface-border transition-colors">
+<div class="flex items-center justify-between font-mono text-[11px]">
+<span class="px-1.5 py-0.5 rounded bg-surface-panel border border-surface-border text-brand-accent font-semibold">PISO 1</span>
+<span class="text-brand-emerald font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>99.8% SLA
+</span>
+</div>
+<span class="text-xs font-semibold text-text-main mt-0.5">Taller &amp; Servicios</span>
+<p class="text-[11px] text-text-muted">Alimentador Sub-TG1 • 220V</p>
+<div class="mt-1 pt-2 border-t border-surface-border/50 flex items-center justify-between font-mono text-xs">
+<span class="text-text-dim text-[11px]">Potencia activa:</span>
+<span class="text-text-main font-semibold">42.8 kW</span>
+</div>
+<div class="w-full bg-[#081220] h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-brand-emerald h-full rounded-full" style="width: 48%"></div>
+</div>
+</div>
+</div>
+<!-- Rama Piso 2 (Perturbación) -->
+<div class="flex flex-col items-center relative">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-brand-red"></div>
+<div class="w-full bg-surface-card border border-brand-red/50 p-3.5 rounded flex flex-col gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.08)]">
+<div class="flex items-center justify-between font-mono text-[11px]">
+<span class="px-1.5 py-0.5 rounded bg-brand-red/15 border border-brand-red/40 text-brand-red font-semibold">PISO 2</span>
+<span class="text-brand-red font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-red animate-ping"></span>PERTURBACIÓN
+</span>
+</div>
+<span class="text-xs font-semibold text-text-main mt-0.5">Laboratorios &amp; Oficinas</span>
+<p class="text-[11px] text-text-muted">Alimentador Sub-TG2 • 220V</p>
+<div class="mt-1 pt-2 border-t border-surface-border/50 flex items-center justify-between font-mono text-xs">
+<span class="text-text-dim text-[11px]">Potencia activa:</span>
+<span class="text-brand-red font-semibold">68.4 kW</span>
+</div>
+<div class="w-full bg-[#081220] h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-brand-red h-full rounded-full" style="width: 89%"></div>
+</div>
+</div>
+</div>
+<!-- Rama Piso 3 (Flujo Parcial) -->
+<div class="flex flex-col items-center relative">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-surface-border"></div>
+<div class="w-full bg-surface-card border border-surface-border/70 p-3.5 rounded flex flex-col gap-1.5 hover:border-surface-border transition-colors">
+<div class="flex items-center justify-between font-mono text-[11px]">
+<span class="px-1.5 py-0.5 rounded bg-surface-panel border border-surface-border text-brand-accent font-semibold">PISO 3</span>
+<span class="text-brand-amber font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-amber"></span>FLUJO PARCIAL
+</span>
+</div>
+<span class="text-xs font-semibold text-text-main mt-0.5">Aulas &amp; Administración</span>
+<p class="text-[11px] text-text-muted">Alimentador Sub-TG3 • 220V</p>
+<div class="mt-1 pt-2 border-t border-surface-border/50 flex items-center justify-between font-mono text-xs">
+<span class="text-text-dim text-[11px]">Potencia activa:</span>
+<span class="text-text-main font-semibold">51.2 kW</span>
+</div>
+<div class="w-full bg-[#081220] h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-brand-amber h-full rounded-full" style="width: 61%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Comparativa Continua Bus A (Fuerza) vs Bus B (Regulada) -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<!-- Columna Bus A: Línea Crítica / Perturbada -->
+<div class="bg-surface-panel/90 border border-surface-border/70 rounded p-5 flex flex-col gap-4">
+<div class="flex items-center justify-between border-b border-surface-border/60 pb-3">
+<div class="flex items-center gap-2.5">
+<span class="px-2 py-0.5 rounded bg-brand-red/15 border border-brand-red/40 text-brand-red font-mono text-xs font-semibold">BUS A</span>
+<div>
+<h3 class="text-xs font-semibold text-text-main uppercase tracking-tight">Red Potencia &amp; Fuerza Dinámica</h3>
+<p class="font-mono text-[11px] text-text-muted">Taller Pesado, Chillers P2 &amp; Datacenter</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-brand-red/15 border border-brand-red/30 text-brand-red font-mono text-[11px] font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>THD ELEVADO
+</span>
+</div>
+<!-- Métricas Monospace Comparativas -->
+<div class="grid grid-cols-3 gap-2.5">
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Voltaje Línea</span>
+<span class="font-mono text-base font-semibold text-text-main mt-0.5">214.2 <span class="text-[11px] font-normal text-text-dim">V</span></span>
+<span class="font-mono text-[10px] text-brand-red mt-0.5">-3.8% Caída</span>
+</div>
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Demanda Activa</span>
+<span class="font-mono text-base font-semibold text-text-main mt-0.5">94.8 <span class="text-[11px] font-normal text-text-dim">kW</span></span>
+<span class="font-mono text-[10px] text-text-muted mt-0.5">FP: 0.84 ind</span>
+</div>
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Corriente Neutro</span>
+<span class="font-mono text-base font-semibold text-brand-red mt-0.5">42.6 <span class="text-[11px] font-normal text-text-dim">A</span></span>
+<span class="font-mono text-[10px] text-brand-red mt-0.5">3ra Armónica</span>
+</div>
+</div>
+<!-- Cargas Asociadas Bus A -->
+<div class="flex flex-col gap-1.5 pt-1">
+<span class="font-mono text-[10px] uppercase tracking-wider text-text-dim">Comportamiento en tiempo real • Cargas Asociadas</span>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+<span class="font-mono text-text-main font-medium">MED-P2-CHILLER-01</span>
+</div>
+<span class="font-mono text-[11px] text-brand-red">Generador de Armónicas (Causante)</span>
+<span class="font-mono text-text-main font-semibold">41.2 kW</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-amber"></span>
+<span class="font-mono text-text-main font-medium">MED-P2-DATACENTER-A</span>
+</div>
+<span class="font-mono text-[11px] text-brand-amber">Subtensión Reflejada (Víctima)</span>
+<span class="font-mono text-text-main font-semibold">27.2 kW</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+<span class="font-mono text-text-main font-medium">MED-P1-MAQUINADOS</span>
+</div>
+<span class="font-mono text-[11px] text-brand-emerald">Tolerancia nominal</span>
+<span class="font-mono text-text-main font-semibold">26.4 kW</span>
+</div>
+</div>
+</div>
+<!-- Columna Bus B: Línea Regulada e Iluminación -->
+<div class="bg-surface-panel/90 border border-surface-border/70 rounded p-5 flex flex-col gap-4">
+<div class="flex items-center justify-between border-b border-surface-border/60 pb-3">
+<div class="flex items-center gap-2.5">
+<span class="px-2 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/40 text-brand-emerald font-mono text-xs font-semibold">BUS B</span>
+<div>
+<h3 class="text-xs font-semibold text-text-main uppercase tracking-tight">Red Regulada, Aulas &amp; Oficinas</h3>
+<p class="font-mono text-[11px] text-text-muted">Iluminación LED y Aulas P3</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-mono text-[11px] font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>ESTABLE
+</span>
+</div>
+<!-- Métricas Monospace Comparativas -->
+<div class="grid grid-cols-3 gap-2.5">
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Voltaje Línea</span>
+<span class="font-mono text-base font-semibold text-text-main mt-0.5">221.8 <span class="text-[11px] font-normal text-text-dim">V</span></span>
+<span class="font-mono text-[10px] text-brand-emerald mt-0.5">+0.8% Nominal</span>
+</div>
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Demanda Activa</span>
+<span class="font-mono text-base font-semibold text-text-main mt-0.5">67.6 <span class="text-[11px] font-normal text-text-dim">kW</span></span>
+<span class="font-mono text-[10px] text-text-muted mt-0.5">FP: 0.96 cap</span>
+</div>
+<div class="bg-surface-card border border-surface-border/60 p-2.5 rounded flex flex-col">
+<span class="font-mono text-[10px] uppercase text-text-dim">Corriente Neutro</span>
+<span class="font-mono text-base font-semibold text-text-main mt-0.5">6.2 <span class="text-[11px] font-normal text-text-dim">A</span></span>
+<span class="font-mono text-[10px] text-brand-emerald mt-0.5">Balanceado</span>
+</div>
+</div>
+<!-- Cargas Asociadas Bus B -->
+<div class="flex flex-col gap-1.5 pt-1">
+<span class="font-mono text-[10px] uppercase tracking-wider text-text-dim">Comportamiento en tiempo real • Cargas Asociadas</span>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+<span class="font-mono text-text-main font-medium">MED-P3-AULAS-MAGNAS</span>
+</div>
+<span class="font-mono text-[11px] text-brand-emerald">Operación óptima</span>
+<span class="font-mono text-text-main font-semibold">22.8 kW</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+<span class="font-mono text-text-main font-medium">MED-P1-ILUMINACION-EXT</span>
+</div>
+<span class="font-mono text-[11px] text-brand-emerald">Fotocelda en reposo</span>
+<span class="font-mono text-text-main font-semibold">16.4 kW</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-card/70 border border-surface-border/50 text-xs">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-slate"></span>
+<span class="font-mono text-text-muted font-medium">MED-P3-ADMIN-HVAC</span>
+</div>
+<span class="font-mono text-[11px] text-brand-slate">Telemetría Intermitente</span>
+<span class="font-mono text-text-dim">—</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Tabla de Submedición y Telemetría Continua -->
+<section class="bg-surface-panel/90 border border-surface-border/70 rounded p-5 flex flex-col gap-4">
+<!-- Controles y Filtros -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+<div class="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+<span class="text-text-dim uppercase text-[11px] mr-1">Piso:</span>
+<button class="floor-btn px-2.5 py-1 rounded bg-brand-emerald text-[#041d13] font-semibold border border-brand-emerald" data-floor-filter="all">Todos (7)</button>
+<button class="floor-btn px-2.5 py-1 rounded bg-surface-card text-text-muted hover:text-text-main hover:bg-surface-card-hover border border-surface-border" data-floor-filter="p1">Piso 1 (2)</button>
+<button class="floor-btn px-2.5 py-1 rounded bg-surface-card text-text-muted hover:text-text-main hover:bg-surface-card-hover border border-surface-border" data-floor-filter="p2">Piso 2 (2)</button>
+<button class="floor-btn px-2.5 py-1 rounded bg-surface-card text-text-muted hover:text-text-main hover:bg-surface-card-hover border border-surface-border" data-floor-filter="p3">Piso 3 (3)</button>
+</div>
+<div class="flex items-center gap-2.5">
+<div class="relative w-full md:w-64">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[17px] text-text-dim">search</span>
+<input class="w-full pl-8 pr-3 py-1 bg-[#091424] border border-surface-border rounded text-xs text-text-main focus:outline-none focus:border-brand-accent placeholder:text-text-dim font-mono" id="device-search" placeholder="Buscar ID o área..." type="text"/>
+</div>
+<span class="font-mono text-xs px-2.5 py-1 rounded bg-surface-card border border-surface-border text-text-muted shrink-0" id="meters-counter">
+7 medidores
+</span>
+</div>
+</div>
+<!-- Leyenda técnica simplificada -->
+<div class="flex flex-wrap items-center gap-2.5 p-2 bg-[#081220] rounded border border-surface-border/50 text-[11px] font-mono">
+<span class="text-text-dim uppercase">Clasificación:</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand-red/15 border border-brand-red/30 text-brand-red font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>
+Causante • Sobrecarga armónica activa
+</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand-amber/15 border border-brand-amber/30 text-brand-amber font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-amber"></span>
+Víctima • Perturbación inducida por bus
+</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#1e293b]/70 border border-[#334155] text-brand-slate font-medium">
+<span class="w-1.5 h-1.5 rounded-full border border-brand-slate bg-transparent"></span>
+No sé • Sin dato fresco / Enlace perdido
+</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+Normal • Telemetría sincrónica dentro de norma
+</span>
+</div>
+<!-- Tabla de Telemetría -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse font-sans text-xs">
+<thead>
+<tr class="bg-[#091424] text-text-dim font-mono text-[11px] border-y border-surface-border/80">
+<th class="py-2.5 px-3 uppercase font-medium">NOMBRE DEL MEDIDOR</th>
+<th class="py-2.5 px-3 uppercase font-medium">PISO</th>
+<th class="py-2.5 px-3 uppercase font-medium">TURNO</th>
+<th class="py-2.5 px-3 uppercase font-medium text-right">LATENCIA</th>
+<th class="py-2.5 px-3 uppercase font-medium text-right">EDAD LECTURA</th>
+<th class="py-2.5 px-3 uppercase font-medium text-right">VOLTAJE</th>
+<th class="py-2.5 px-3 uppercase font-medium text-right">POTENCIA ACTIVA</th>
+<th class="py-2.5 px-3 uppercase font-medium text-center">ESTADO DE LECTURA</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-border/40 font-mono text-xs" id="meters-table-body">
+<!-- FILA 1: MEDIDOR CAUSANTE (Rojo) -->
+<tr class="hover:bg-brand-red/5 transition-colors meter-row" data-floor="p2" data-name="med-p2-chiller-01 compresor central chillers vav edif. a">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-red text-[18px]">error</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P2-CHILLER-01</span>
+<span class="text-[11px] text-text-muted">Compresor Chillers VAV Edif. A</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 2</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 1 (Matutino)</td>
+<td class="py-3 px-3 text-right text-brand-red font-semibold">48 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 2s</td>
+<td class="py-3 px-3 text-right text-brand-red font-semibold">208.4 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-brand-red font-semibold">41.20 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-red/15 border border-brand-red/40 text-brand-red font-semibold text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-red animate-ping"></span>Causante
+</span>
+</td>
+</tr>
+<!-- FILA 2: MEDIDOR VÍCTIMA (Ámbar) -->
+<tr class="hover:bg-brand-amber/5 transition-colors meter-row" data-floor="p2" data-name="med-p2-datacenter-a rack de servidores ti &amp; nodos">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-amber text-[18px]">warning</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P2-DATACENTER-A</span>
+<span class="text-[11px] text-text-muted">Rack de Servidores TI &amp; Nodos</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 2</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 1 (Matutino)</td>
+<td class="py-3 px-3 text-right text-brand-amber font-semibold">62 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 4s</td>
+<td class="py-3 px-3 text-right text-brand-amber font-semibold">212.1 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-text-main font-semibold">27.20 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-amber/15 border border-brand-amber/40 text-brand-amber font-semibold text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-amber"></span>Víctima
+</span>
+</td>
+</tr>
+<!-- FILA 3: MEDIDOR SIN DATO FRESCO 'No sé' (Gris Pizarra) -->
+<tr class="bg-[#091424]/40 hover:bg-[#091424]/80 transition-colors meter-row" data-floor="p3" data-name="med-p3-admin-hvac condensadora exterior y fan-coil">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans opacity-75">
+<span class="material-symbols-outlined text-brand-slate text-[18px]">wifi_off</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-muted font-semibold">MED-P3-ADMIN-HVAC</span>
+<span class="text-[11px] text-text-dim">Condensadora Exterior y Fan-Coil</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-dim font-medium">Piso 3</span>
+</td>
+<td class="py-3 px-3 text-text-dim font-sans text-[11px]">Turno 2 (Vespertino)</td>
+<td class="py-3 px-3 text-right text-text-dim">—</td>
+<td class="py-3 px-3 text-right text-brand-red font-semibold">hace 412s (stale)</td>
+<td class="py-3 px-3 text-right text-text-dim">—</td>
+<td class="py-3 px-3 text-right text-text-dim">—</td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#1e293b] border border-[#334155] text-brand-slate font-bold tracking-wide text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full border border-brand-slate bg-transparent"></span>No sé
+</span>
+</td>
+</tr>
+<!-- FILA 4: MEDIDOR NORMAL (Piso 1 Maquinados) -->
+<tr class="hover:bg-surface-card/40 transition-colors meter-row" data-floor="p1" data-name="med-p1-maquinados torno cnc mecanica y soldadura">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-emerald text-[18px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P1-MAQUINADOS</span>
+<span class="text-[11px] text-text-muted">Torno CNC Mecánica y Soldadura</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 1</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 1 (Matutino)</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">14 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 1s</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">220.4 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-text-main font-semibold">26.40 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-medium text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>Normal
+</span>
+</td>
+</tr>
+<!-- FILA 5: MEDIDOR NORMAL (Piso 1 Iluminación) -->
+<tr class="hover:bg-surface-card/40 transition-colors meter-row" data-floor="p1" data-name="med-p1-iluminacion-ext luminarias perimetrales &amp; acceso">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-emerald text-[18px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P1-ILUMINACION-EXT</span>
+<span class="text-[11px] text-text-muted">Luminarias Perimetrales &amp; Acceso</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 1</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 2 (Vespertino)</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">21 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 3s</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">221.0 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-text-main font-semibold">16.40 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-medium text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>Normal
+</span>
+</td>
+</tr>
+<!-- FILA 6: MEDIDOR NORMAL (Piso 3 Aulas) -->
+<tr class="hover:bg-surface-card/40 transition-colors meter-row" data-floor="p3" data-name="med-p3-aulas-magnas audiovisual, proyectores y tomas aulas 301-308">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-emerald text-[18px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P3-AULAS-MAGNAS</span>
+<span class="text-[11px] text-text-muted">Audiovisual, Proyectores y Tomas 301-308</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 3</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 1 (Matutino)</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">18 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 2s</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">219.7 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-text-main font-semibold">22.80 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-medium text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>Normal
+</span>
+</td>
+</tr>
+<!-- FILA 7: MEDIDOR NORMAL (Piso 3 Profesores) -->
+<tr class="hover:bg-surface-card/40 transition-colors meter-row" data-floor="p3" data-name="med-p3-profesores cubiculos docentes, red lan e impresion">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2.5 font-sans">
+<span class="material-symbols-outlined text-brand-emerald text-[18px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-mono text-xs text-text-main font-semibold">MED-P3-PROFESORES</span>
+<span class="text-[11px] text-text-muted">Cubículos Docentes, Red LAN e Impresión</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded bg-surface-card border border-surface-border text-text-main font-medium">Piso 3</span>
+</td>
+<td class="py-3 px-3 text-text-muted font-sans text-[11px]">Turno 1 (Matutino)</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">31 <span class="text-[10px] text-text-dim font-normal">ms</span></td>
+<td class="py-3 px-3 text-right text-text-muted">hace 5s</td>
+<td class="py-3 px-3 text-right text-text-main font-medium">220.8 <span class="text-[10px] text-text-dim font-normal">V</span></td>
+<td class="py-3 px-3 text-right text-text-main font-semibold">28.40 <span class="text-[10px] text-text-dim font-normal">kW</span></td>
+<td class="py-3 px-3 text-center">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-brand-emerald/15 border border-brand-emerald/30 text-brand-emerald font-medium text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>Normal
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pie de tabla técnico unificado -->
+<div class="bg-[#081220] p-3 rounded flex flex-wrap items-center justify-between gap-3 border border-surface-border/50 text-xs font-mono">
+<div class="flex items-center gap-2 text-text-muted">
+<span class="material-symbols-outlined text-[16px] text-brand-accent">hub</span>
+<span>Gateway Modbus RTU • Baudrate: 19200 • IP: 10.40.12.5 (Subestación A1)</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-text-muted">Potencia consolidada: <strong class="text-text-main text-sm font-semibold">162.40 kW</strong></span>
+<span class="text-text-muted">Factor Potencia Global: <strong class="text-text-main text-sm font-semibold">0.91</strong></span>
+</div>
+</div>
+</section>
+</div>
+<script>
+  (function initMetersLogic() {
+    const searchInput = document.getElementById('device-search');
+    const floorButtons = document.querySelectorAll('.floor-btn');
+    const tableBody = document.getElementById('meters-table-body');
+    const counter = document.getElementById('meters-counter');
+    const refreshBtn = document.getElementById('btn-refresh');
+
+    let currentFloor = 'all';
+    let searchQuery = '';
+
+    function filterRows() {
+      const rows = tableBody.querySelectorAll('.meter-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const floor = row.getAttribute('data-floor');
+        const nameText = row.getAttribute('data-name').toLowerCase();
+
+        const matchFloor = (currentFloor === 'all' || floor === currentFloor);
+        const matchSearch = (!searchQuery || nameText.includes(searchQuery));
+
+        if (matchFloor && matchSearch) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (counter) {
+        counter.textContent = `${visibleCount} medidor${visibleCount === 1 ? '' : 'es'}`;
+      }
+    }
+
+    // Floor filter handlers
+    floorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        floorButtons.forEach(b => {
+          b.className = 'floor-btn px-2.5 py-1 rounded bg-surface-card text-text-muted hover:text-text-main hover:bg-surface-card-hover border border-surface-border';
+        });
+        btn.className = 'floor-btn px-2.5 py-1 rounded bg-brand-emerald text-[#041d13] font-semibold border border-brand-emerald';
+
+        currentFloor = btn.getAttribute('data-floor-filter');
+        filterRows();
+      });
+    });
+
+    // Device search handler
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        filterRows();
+      });
+    }
+
+    // Refresh simulation
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        const icon = refreshBtn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.classList.add('animate-spin');
+          setTimeout(() => icon.classList.remove('animate-spin'), 600);
+        }
+      });
+    }
+  })();
+</script></main></div></body></html>

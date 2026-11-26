@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;background-color:#060d1a;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        background: "#060d1a",
+        "bg-subtle": "#0a1424",
+        surface: "#0d192e",
+        "surface-raised": "#112240",
+        "surface-container": "#162b4e",
+        border: "#1a2c4e",
+        "border-subtle": "#15233c",
+        "text-primary": "#f1f5f9",
+        "text-secondary": "#94a3b8",
+        "text-muted": "#64748b",
+        emerald: {
+          400: "#34d399",
+          500: "#10b981",
+          900: "#064e3b",
+          950: "#022c22"
+        },
+        amber: {
+          400: "#fbbf24",
+          500: "#f59e0b",
+          900: "#78350f",
+          950: "#451a03"
+        },
+        coral: {
+          400: "#f87171",
+          500: "#ef4444",
+          900: "#7f1d1d",
+          950: "#450a0a"
+        },
+        cyan: {
+          400: "#22d3ee",
+          500: "#06b6d4"
+        }
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
+      }
+    }
+  }
+};</script></head>
+<body class="bg-[#060d1a] font-sans text-text-primary antialiased selection:bg-emerald-500/20 selection:text-emerald-400">
+<!-- Header Superior Global -->
+<header class="fixed top-0 left-0 right-0 z-50 h-14 bg-[#0a1424]/90 backdrop-blur-md border-b border-border/80 px-4 lg:px-6 flex items-center justify-between gap-4">
+<div class="flex items-center gap-4 min-w-0">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-sm font-semibold tracking-tight text-text-primary">Gemelo digital — Monitor de energía</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium tracking-wide uppercase bg-surface-raised border border-border text-cyan-400">Campus Tijuana — Edificio A</span>
+</div>
+<div class="flex items-center gap-1.5 font-mono text-[10px] text-text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>EN LÍNEA 100% TELEMETRÍA</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<!-- Selector Escenario -->
+<div class="flex items-center gap-1.5 bg-[#0d192e] px-2.5 py-1 rounded border border-border">
+<label class="font-mono text-[11px] text-text-muted uppercase hidden sm:inline" for="escenario-select">Escenario:</label>
+<select class="bg-transparent font-mono text-xs text-text-primary font-medium focus:outline-none cursor-pointer pr-1" id="escenario-select">
+<option class="bg-[#0d192e] text-text-primary" value="normal">Normal</option>
+<option class="bg-[#0d192e] text-text-primary" value="pico-breve">Pico breve</option>
+<option class="bg-[#0d192e] text-text-primary" value="carga-sostenida">Carga sostenida</option>
+<option class="bg-[#0d192e] text-text-primary" value="contador">Contador</option>
+<option class="bg-[#0d192e] text-text-primary" value="medidor-lento">Medidor lento</option>
+<option class="bg-[#0d192e] text-text-primary" value="caida-red">Caída red</option>
+<option class="bg-[#0d192e] text-text-primary" value="caida-motores">Caída motores</option>
+<option class="bg-[#0d192e] text-text-primary" value="caida-sin-datos">Caída sin datos</option>
+<option class="bg-[#0d192e] text-text-primary" value="reparto">Reparto</option>
+</select>
+</div>
+<!-- Reloj -->
+<div class="hidden xl:flex items-center gap-1.5 font-mono text-xs text-text-secondary bg-[#0d192e] px-2.5 py-1 rounded border border-border">
+<span class="material-symbols-outlined text-[15px] text-text-muted">schedule</span>
+<span id="system-time">TIJ 11:42:08 PST</span>
+</div>
+<!-- Perfil -->
+<div class="w-8 h-8 rounded bg-surface-raised border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+</div>
+</header>
+<!-- Navegación Lateral Escritorio -->
+<aside class="fixed left-0 top-14 bottom-0 w-60 bg-[#0a1424] border-r border-border/70 z-40 hidden md:flex flex-col justify-between p-3.5">
+<div class="flex flex-col gap-3">
+<div class="px-2 pt-1">
+<span class="font-mono text-[10px] uppercase tracking-widest text-text-muted font-medium">Supervisión Operacional</span>
+</div>
+<nav class="flex flex-col gap-1">
+<a aria-current="page" class="flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 transition-all" data-path="panel" href="#">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+<span>Panel</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-[#0d192e] border border-transparent transition-all" data-path="medidores" href="#">
+<span class="material-symbols-outlined text-[18px] text-text-muted">speed</span>
+<span>Medidores</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-[#0d192e] border border-transparent transition-all" data-path="alarmas" href="#">
+<span class="material-symbols-outlined text-[18px] text-text-muted">warning</span>
+<span>Alarmas</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-[#0d192e] border border-transparent transition-all" data-path="reparto" href="#">
+<span class="material-symbols-outlined text-[18px] text-text-muted">pie_chart</span>
+<span>Reparto</span>
+</a>
+</nav>
+</div>
+<div class="border-t border-border/80 pt-3 flex flex-col gap-1.5 font-mono text-[11px] text-text-secondary">
+<div class="flex justify-between items-center px-1">
+<span class="text-text-muted text-[10px]">P1: Comunes</span>
+<span class="text-text-primary font-medium">42.8 kW</span>
+</div>
+<div class="flex justify-between items-center px-1">
+<span class="text-text-muted text-[10px]">P2: Labs TI</span>
+<span class="text-text-primary font-medium">68.4 kW</span>
+</div>
+<div class="flex justify-between items-center px-1">
+<span class="text-text-muted text-[10px]">P3: HVAC</span>
+<span class="text-text-primary font-medium">51.2 kW</span>
+</div>
+</div>
+</aside>
+<!-- Navegación Móvil -->
+<nav class="fixed bottom-0 left-0 right-0 h-13 bg-[#0a1424] border-t border-border/80 z-40 flex md:hidden items-center justify-around px-2 py-1">
+<a aria-current="page" class="flex flex-col items-center justify-center py-1 px-3 rounded text-emerald-400 font-medium" data-path="panel" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span class="text-[10px]">Panel</span>
+</a>
+<a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-secondary" data-path="medidores" href="#">
+<span class="material-symbols-outlined text-[20px]">speed</span>
+<span class="text-[10px]">Medidores</span>
+</a>
+<a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-secondary" data-path="alarmas" href="#">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+<span class="text-[10px]">Alarmas</span>
+</a>
+<a class="flex flex-col items-center justify-center py-1 px-3 rounded text-text-secondary" data-path="reparto" href="#">
+<span class="material-symbols-outlined text-[20px]">pie_chart</span>
+<span class="text-[10px]">Reparto</span>
+</a>
+</nav>
+<!-- Contenido Principal -->
+<div class="md:pl-60">
+<main class="w-full pt-14 pb-16 md:pb-6 min-h-screen bg-[#060d1a] px-4 lg:px-6">
+<div class="max-w-[1600px] mx-auto py-4">
+<!-- Barra de Telemetría Rápida (Subestación) -->
+<div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-border/60">
+<div class="flex items-center gap-2.5 flex-wrap font-mono text-xs">
+<span class="text-text-muted uppercase">Subestación 480/220V</span>
+<span class="text-border">/</span>
+<span class="text-text-primary font-medium">Tijuana Norte (Tarifa GDMTH)</span>
+<span class="text-border">/</span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            ENLACE ESTABLE (42ms)
+          </span>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
+<span class="material-symbols-outlined text-[15px] text-amber-400">wb_sunny</span>
+<span>Ext: 28.4°C · 780 W/m²</span>
+</div>
+<button class="px-2.5 py-1 bg-surface-raised hover:bg-surface-container border border-border rounded text-text-secondary hover:text-text-primary font-mono text-[11px] transition-colors" type="button">
+            Exportar CSV
+          </button>
+</div>
+</div>
+<!-- Layout Continuo: 2 Superficies Integradas sin 'card soup' -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+<!-- COLUMNA PRINCIPAL (SUPERFICIE CONTINUA IZQUIERDA - Col 8) -->
+<div class="xl:col-span-8 bg-[#0d192e] border border-border rounded-md overflow-hidden">
+<!-- SECCIÓN 1: Ventana de Demanda Cuartohoraria -->
+<div class="p-5 lg:p-6 border-b border-border/70">
+<div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+<div>
+<div class="flex items-center gap-1.5 mb-1">
+<span class="material-symbols-outlined text-cyan-400 text-[18px]">timelapse</span>
+<span class="font-mono text-[11px] uppercase tracking-wider text-text-muted">Algoritmo de Ventana Deslizante CFE</span>
+</div>
+<h1 class="text-lg lg:text-xl font-semibold text-text-primary tracking-tight">Ventana de demanda cuartohoraria</h1>
+</div>
+<div class="flex items-center gap-2 flex-wrap font-mono text-xs">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  ANTICIPADA (+0.6 kW)
+                </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-raised border border-border text-text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[13px] text-cyan-400">query_stats</span>
+                  [SIM] Estimación 98.2%
+                </span>
+</div>
+</div>
+<!-- Progreso Cuartohorario -->
+<div class="bg-[#081220] p-3 rounded border border-border/50 mb-5">
+<div class="flex justify-between items-baseline mb-1.5 font-mono text-xs">
+<span class="text-text-secondary">
+                  Ventana actual: <strong class="text-text-primary font-semibold">Minuto 9 de 15</strong>
+</span>
+<span class="text-amber-400">
+                  60% transcurrido (6 min restantes)
+                </span>
+</div>
+<div class="w-full h-2 bg-[#112240] rounded overflow-hidden flex">
+<div class="h-full bg-cyan-500 transition-all duration-500" style="width: 60%"></div>
+<div class="h-full bg-amber-500/40 animate-pulse" style="width: 40%"></div>
+</div>
+<div class="flex justify-between font-mono text-[10px] text-text-muted mt-1.5">
+<span>11:30:00</span>
+<span class="text-cyan-400">11:37:30 (Actual)</span>
+<span>11:45:00 (Corte)</span>
+</div>
+</div>
+<!-- Métricas Acumulado vs Proyectado en 2 Columnas Sutiles -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+<div class="p-3.5 bg-[#0a1424] rounded border border-border/60">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs text-text-secondary">Potencia media acumulada</span>
+<span class="font-mono text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">NORMAL</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-mono text-3xl font-semibold text-text-primary tracking-tight">26.4</span>
+<span class="font-mono text-xs text-text-muted font-medium">kW</span>
+</div>
+<p class="font-mono text-[11px] text-text-muted mt-1.5">Energía integrada: 3.96 kWh en 9 min</p>
+</div>
+<div class="p-3.5 bg-[#0a1424] rounded border border-coral-500/30">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs text-coral-400 font-medium">Demanda máxima proyectada</span>
+<span class="font-mono text-[10px] font-semibold text-coral-400 bg-coral-500/15 border border-coral-500/30 px-1.5 py-0.5 rounded">EXCESO</span>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-mono text-3xl font-semibold text-coral-400 tracking-tight">40.6</span>
+<span class="font-mono text-xs text-text-muted font-medium">kW</span>
+<span class="font-mono text-xs text-text-muted ml-auto">/ lím <strong class="text-text-primary">40.0 kW</strong></span>
+</div>
+<p class="font-mono text-[11px] text-coral-400/90 font-medium mt-1.5">Riesgo de penalización: +$1,840 MXN / mes CFE</p>
+</div>
+</div>
+<!-- Gráfico de Trazo de Demanda Cuartohoraria -->
+<div class="bg-[#081220] rounded border border-border/50 p-3.5">
+<div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+<span class="font-mono text-[11px] text-text-secondary uppercase tracking-wider">Trazo de Demanda (Ventana 11:30 - 11:45)</span>
+<div class="flex items-center gap-3 font-mono text-[10px] text-text-muted">
+<span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-cyan-400 inline-block"></span> Real</span>
+<span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-amber-400 border-t border-dashed inline-block"></span> Proyección</span>
+<span class="inline-flex items-center gap-1"><span class="w-3 h-0.5 bg-coral-500 inline-block"></span> Límite 40 kW</span>
+</div>
+</div>
+<svg class="w-full h-24 text-text-primary" fill="none" preserveaspectratio="none" viewbox="0 0 500 100">
+<!-- Grid Lines -->
+<line stroke="#1a2c4e" stroke-dasharray="2 2" stroke-opacity="0.6" x1="0" x2="500" y1="20" y2="20"></line>
+<line stroke="#1a2c4e" stroke-dasharray="2 2" stroke-opacity="0.6" x1="0" x2="500" y1="50" y2="50"></line>
+<line stroke="#1a2c4e" stroke-dasharray="2 2" stroke-opacity="0.6" x1="0" x2="500" y1="80" y2="80"></line>
+<!-- Línea Límite 40 kW -->
+<line stroke="#ef4444" stroke-dasharray="4 4" stroke-width="1.5" x1="0" x2="500" y1="35" y2="35"></line>
+<!-- Curva Real (0-9 min) -->
+<path d="M 0 85 L 35 80 L 70 82 L 105 75 L 140 70 L 175 62 L 210 58 L 245 46 L 275 42 L 300 38" fill="none" stroke="#22d3ee" stroke-width="2.5"></path>
+<!-- Curva Proyectada (9-15 min) -->
+<path d="M 300 38 L 340 33 L 380 28 L 420 25 L 460 22 L 500 20" fill="none" stroke="#f59e0b" stroke-dasharray="3 3" stroke-width="2"></path>
+<!-- Nodos -->
+<circle cx="300" cy="38" fill="#22d3ee" r="4"></circle>
+<circle cx="500" cy="20" fill="#ef4444" r="3.5"></circle>
+</svg>
+<div class="flex justify-between font-mono text-[10px] text-text-muted mt-1 px-1">
+<span>0 min (21.2 kW)</span>
+<span>4 min (24.0 kW)</span>
+<span class="text-cyan-400">9 min (Actual: 38.8 kW)</span>
+<span>12 min (~40.1 kW)</span>
+<span class="text-coral-400 font-medium">15 min (~40.6 kW)</span>
+</div>
+</div>
+</div>
+<!-- SECCIÓN 2: Recomendación de Mitigación Integrada -->
+<div class="p-5 lg:p-6 border-b border-border/70 bg-[#0b172a]">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">smart_toy</span>
+</div>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-mono text-[11px] text-amber-400 font-semibold uppercase tracking-wide">Recomendación #GD-09</span>
+<span class="text-border">·</span>
+<span class="font-mono text-[11px] text-text-muted">Eficacia calculada 99.4%</span>
+</div>
+<h2 class="text-sm md:text-base font-semibold text-text-primary mt-0.5">
+                    Diferir compresor hasta 12:15 — afecta al taller mecánico
+                  </h2>
+<p class="text-xs text-text-secondary mt-1 max-w-2xl leading-relaxed">
+                    La detención temporal reduce instantáneamente <strong class="text-text-primary font-semibold">5.8 kW</strong> de potencia activa, manteniendo la demanda punta del intervalo en <strong class="text-emerald-400 font-semibold">37.4 kW</strong> (por debajo del límite de 40.0 kW).
+                  </p>
+</div>
+</div>
+<div class="shrink-0 self-start md:self-center">
+<button class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-[#022c22] font-semibold text-xs rounded transition-colors flex items-center gap-1.5 shadow-sm active:scale-95" id="btn-aplicar-rec" type="button">
+<span class="material-symbols-outlined text-[16px]">play_circle</span>
+<span>Aplicar Deslastre</span>
+</button>
+</div>
+</div>
+</div>
+<!-- SECCIÓN 3: Análisis Tipográfico Sobrio de 5 Factores -->
+<div class="p-5 lg:p-6">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-cyan-400 text-[18px]">psychology</span>
+<h3 class="text-sm font-semibold text-text-primary">¿Por qué recomienda esta acción el gemelo?</h3>
+</div>
+<span class="font-mono text-[10px] uppercase tracking-wider text-text-muted">5 Factores Determinantes</span>
+</div>
+<!-- Lista continua refinada sin tarjetas anidadas -->
+<div class="divide-y divide-border/60">
+<div class="py-2.5 flex items-start gap-3">
+<span class="font-mono text-xs font-semibold text-cyan-400 w-5 shrink-0 pt-0.5">01</span>
+<p class="text-xs text-text-secondary leading-relaxed">
+<strong class="text-text-primary font-medium">Superposición de ciclos:</strong> El ciclo de compresión del taller mecánico coincide exactamente con la entrada del segundo compresor del Chiller en Piso 2 (HVAC).
+                </p>
+</div>
+<div class="py-2.5 flex items-start gap-3">
+<span class="font-mono text-xs font-semibold text-cyan-400 w-5 shrink-0 pt-0.5">02</span>
+<p class="text-xs text-text-secondary leading-relaxed">
+<strong class="text-text-primary font-medium">Gradiente crítico:</strong> La pendiente de consumo actual supera los <span class="font-mono text-amber-400 font-semibold">1.8 kW/min</span> registrada en los últimos 4 minutos continuos.
+                </p>
+</div>
+<div class="py-2.5 flex items-start gap-3">
+<span class="font-mono text-xs font-semibold text-cyan-400 w-5 shrink-0 pt-0.5">03</span>
+<p class="text-xs text-text-secondary leading-relaxed">
+<strong class="text-text-primary font-medium">Inercia térmica disponible:</strong> La inercia térmica del Edificio A permite diferir la carga sin afectar la temperatura de confort ni procesos críticos (ΔT proyectado &lt; 0.3°C).
+                </p>
+</div>
+<div class="py-2.5 flex items-start gap-3">
+<span class="font-mono text-xs font-semibold text-cyan-400 w-5 shrink-0 pt-0.5">04</span>
+<p class="text-xs text-text-secondary leading-relaxed">
+<strong class="text-text-primary font-medium">Sincronización tarifaria:</strong> Diferir 15 minutos desplaza el pico fuera de la ventana de corte de CFE/medición (11:45:00), neutralizando la penalización mensual.
+                </p>
+</div>
+<div class="py-2.5 flex items-start gap-3">
+<span class="font-mono text-xs font-semibold text-cyan-400 w-5 shrink-0 pt-0.5">05</span>
+<p class="text-xs text-text-secondary leading-relaxed">
+<strong class="text-text-primary font-medium">Arranque simultáneo:</strong> Los motores del Bus B de distribución de fuerza se encuentran actualmente en rampa de arranque simultánea, induciendo pico de corriente reactiva.
+                </p>
+</div>
+</div>
+<!-- Interactivo Desplegable de Condiciones Umbral -->
+<div class="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0a1424] hover:bg-surface-raised border border-border rounded text-xs text-text-primary transition-all" id="btn-que-falta" type="button">
+<span class="material-symbols-outlined text-[15px] text-cyan-400">help_outline</span>
+<span>¿Qué falta para que cambie la recomendación?</span>
+</button>
+<span class="font-mono text-[10px] text-text-muted">
+                Actualización del modelo: cada 10 s (próxima en 3s)
+              </span>
+</div>
+<div class="hidden mt-3 p-3 bg-[#081220] border border-border/80 rounded" id="panel-umbral">
+<div class="flex items-center justify-between mb-2 pb-1.5 border-b border-border/60">
+<span class="font-mono text-xs text-text-primary font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-amber-400">tune</span>
+                  Condiciones requeridas para anular la alerta:
+                </span>
+<button class="text-text-muted hover:text-text-primary" id="btn-cerrar-umbral">
+<span class="material-symbols-outlined text-[15px]">close</span>
+</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-text-secondary">
+<div class="p-2.5 bg-[#0d192e] rounded border border-border/50">
+<p class="font-mono text-[11px] text-cyan-400 font-medium">Condición A: Reducción Piso 1</p>
+<p class="mt-1 leading-snug">Disminución inmediata de al menos <strong class="text-text-primary font-semibold">4.2 kW</strong> en áreas comunes / iluminación dentro de los próximos 90 segundos.</p>
+</div>
+<div class="p-2.5 bg-[#0d192e] rounded border border-border/50">
+<p class="font-mono text-[11px] text-cyan-400 font-medium">Condición B: Parada Programada</p>
+<p class="mt-1 leading-snug">Parada manual anticipada del compresor antes de las 11:39, o modulación del VFD del chiller a 60% de capacidad.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- COLUMNA LATERAL (SUPERFICIE CONTINUA DERECHA - Col 4) -->
+<div class="xl:col-span-4 bg-[#0d192e] border border-border rounded-md overflow-hidden divide-y divide-border/70">
+<!-- BLOQUE 1: Simulación Predictiva ¿Qué pasaría si...? -->
+<div class="p-5">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-7 h-7 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center">
+<span class="material-symbols-outlined text-[17px]">science</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-primary">Simulación predictiva</h3>
+<span class="font-mono text-[10px] text-text-muted uppercase">¿Qué pasaría si…?</span>
+</div>
+</div>
+<p class="text-xs text-text-secondary mb-4 leading-relaxed">
+              Modela el impacto de deslastrar o desfasar cargas mecánicas antes del cierre de intervalo.
+            </p>
+<form class="space-y-4" id="sim-form" onsubmit="event.preventDefault(); runSimulation();">
+<!-- Selección de Cargas -->
+<div>
+<label class="block font-mono text-[10px] text-text-muted uppercase tracking-wider mb-1.5">
+                  Equipo o Motor
+                </label>
+<div class="space-y-1.5">
+<label class="flex items-center justify-between p-2 rounded bg-[#0a1424] hover:bg-[#112240] border border-border/60 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<input checked="" class="accent-cyan-400 bg-transparent text-cyan-500" name="sim-motor" type="radio" value="compresor"/>
+<span class="text-xs text-text-primary font-medium">Compresor taller mecánico</span>
+</div>
+<span class="font-mono text-xs text-text-secondary">5.8 kW</span>
+</label>
+<label class="flex items-center justify-between p-2 rounded bg-[#0a1424] hover:bg-[#112240] border border-border/60 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<input class="accent-cyan-400 bg-transparent text-cyan-500" name="sim-motor" type="radio" value="bomba"/>
+<span class="text-xs text-text-primary font-medium">Bomba agua cisterna (P1)</span>
+</div>
+<span class="font-mono text-xs text-text-secondary">3.4 kW</span>
+</label>
+<label class="flex items-center justify-between p-2 rounded bg-[#0a1424] hover:bg-[#112240] border border-border/60 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<input class="accent-cyan-400 bg-transparent text-cyan-500" name="sim-motor" type="radio" value="extractor"/>
+<span class="text-xs text-text-primary font-medium">Extractor laboratorios (P2)</span>
+</div>
+<span class="font-mono text-xs text-text-secondary">2.1 kW</span>
+</label>
+</div>
+</div>
+<!-- Minutos de Retraso -->
+<div>
+<div class="flex justify-between items-center mb-1.5">
+<label class="font-mono text-[10px] text-text-muted uppercase tracking-wider" for="sim-minutos">
+                    Minutos de retraso
+                  </label>
+<span class="font-mono text-xs text-cyan-400 font-semibold" id="delay-display">15 min</span>
+</div>
+<div class="grid grid-cols-3 gap-1.5">
+<button class="delay-btn py-1.5 px-2 bg-[#0a1424] text-text-secondary hover:text-text-primary border border-border/60 rounded font-mono text-xs text-center transition-colors" onclick="setDelay(10)" type="button">
+                    10 min
+                  </button>
+<button class="delay-btn py-1.5 px-2 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded font-mono text-xs text-center font-medium transition-colors" onclick="setDelay(15)" type="button">
+                    15 min
+                  </button>
+<button class="delay-btn py-1.5 px-2 bg-[#0a1424] text-text-secondary hover:text-text-primary border border-border/60 rounded font-mono text-xs text-center transition-colors" onclick="setDelay(30)" type="button">
+                    30 min
+                  </button>
+</div>
+<input class="w-full mt-2.5 accent-cyan-400 cursor-pointer h-1.5 bg-[#112240] rounded appearance-none" id="sim-minutos" max="45" min="5" oninput="updateDelaySlider(this.value)" step="5" type="range" value="15"/>
+</div>
+<button class="w-full py-2 px-3 bg-[#112240] hover:bg-surface-container border border-cyan-500/40 text-cyan-400 font-semibold text-xs rounded transition-colors flex items-center justify-center gap-1.5" type="submit">
+<span class="material-symbols-outlined text-[16px]">calculate</span>
+<span>Probar Simulación</span>
+</button>
+</form>
+<!-- Micro-proyección Comparada -->
+<div class="mt-4 p-3 bg-[#081220] rounded border border-border/60" id="sim-resultado">
+<div class="flex items-center justify-between mb-2">
+<span class="font-mono text-[10px] text-text-muted uppercase tracking-wider">Micro-proyección comparada</span>
+<span class="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px] font-semibold" id="badge-resultado">
+                  SEGURO (-3.2 kW)
+                </span>
+</div>
+<div class="w-full h-18 bg-[#0a1424] rounded p-1.5 relative border border-border/40">
+<svg class="w-full h-14" fill="none" preserveaspectratio="none" viewbox="0 0 300 80">
+<line stroke="#ef4444" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="300" y1="24" y2="24"></line>
+<!-- Curva sin retraso -->
+<path d="M 0 65 Q 100 55, 180 30 T 300 15" fill="none" id="curve-sin" stroke="#f59e0b" stroke-dasharray="2 2" stroke-width="1.8"></path>
+<!-- Curva simulada -->
+<path d="M 0 65 Q 100 55, 180 45 T 300 38" fill="none" id="curve-con" stroke="#10b981" stroke-width="2.2"></path>
+</svg>
+<div class="absolute bottom-1 right-2 font-mono text-[9px] text-text-muted">
+                  Ventana 15m
+                </div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-2 font-mono text-[10px]">
+<div class="bg-[#0d192e] p-2 rounded border border-border/40">
+<span class="text-text-muted block">Sin retraso:</span>
+<span class="text-amber-400 font-semibold" id="kw-sin">40.6 kW (Exceso)</span>
+</div>
+<div class="bg-[#0d192e] p-2 rounded border border-border/40">
+<span class="text-text-muted block">Con retraso:</span>
+<span class="text-emerald-400 font-semibold" id="kw-con">37.4 kW (Aprobado)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- BLOQUE 2: Desglose de Submedición Integrada -->
+<div class="p-5">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-cyan-400 text-[18px]">layers</span>
+<h4 class="text-sm font-semibold text-text-primary">Submedición Edificio A</h4>
+</div>
+<span class="font-mono text-xs font-semibold text-text-primary">162.4 kW tot</span>
+</div>
+<div class="space-y-1.5 font-mono text-xs">
+<div class="flex items-center justify-between p-2.5 rounded bg-[#0a1424] border border-border/50">
+<div class="flex flex-col">
+<span class="font-medium text-text-primary">Nivel 1 — Comunes / Recepción</span>
+<span class="text-[10px] text-text-muted">PF: 0.96 · 220V 3Φ</span>
+</div>
+<span class="text-text-primary font-semibold">42.8 kW</span>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded bg-[#0a1424] border border-border/50">
+<div class="flex flex-col">
+<span class="font-medium text-text-primary">Nivel 2 — Laboratorios TI &amp; Redes</span>
+<span class="text-[10px] text-text-muted">PF: 0.98 · Climatización UPS</span>
+</div>
+<span class="text-text-primary font-semibold">68.4 kW</span>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded bg-[#0a1424] border border-border/50">
+<div class="flex flex-col">
+<span class="font-medium text-text-primary">Nivel 3 — HVAC &amp; Aulas Magna</span>
+<span class="text-[10px] text-text-muted">PF: 0.91 · Inversores VFD</span>
+</div>
+<span class="text-text-primary font-semibold">51.2 kW</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Scripts de Interacción Preservados y Adaptados al Dark Mode -->
+<script>
+      const btnQueFalta = document.getElementById('btn-que-falta');
+      const panelUmbral = document.getElementById('panel-umbral');
+      const btnCerrarUmbral = document.getElementById('btn-cerrar-umbral');
+
+      if (btnQueFalta && panelUmbral) {
+        btnQueFalta.addEventListener('click', () => {
+          panelUmbral.classList.toggle('hidden');
+        });
+      }
+
+      if (btnCerrarUmbral && panelUmbral) {
+        btnCerrarUmbral.addEventListener('click', () => {
+          panelUmbral.classList.add('hidden');
+        });
+      }
+
+      let currentDelay = 15;
+
+      function setDelay(mins) {
+        currentDelay = mins;
+        const slider = document.getElementById('sim-minutos');
+        if (slider) slider.value = mins;
+        updateDelayLabel(mins);
+        updateDelayButtons(mins);
+      }
+
+      function updateDelaySlider(val) {
+        currentDelay = parseInt(val, 10);
+        updateDelayLabel(currentDelay);
+        updateDelayButtons(currentDelay);
+      }
+
+      function updateDelayLabel(val) {
+        const label = document.getElementById('delay-display');
+        if (label) label.textContent = `${val} min`;
+      }
+
+      function updateDelayButtons(val) {
+        const buttons = document.querySelectorAll('.delay-btn');
+        buttons.forEach(btn => {
+          if (btn.textContent.includes(`${val} min`)) {
+            btn.className = 'delay-btn py-1.5 px-2 bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 rounded font-mono text-xs text-center font-medium transition-colors';
+          } else {
+            btn.className = 'delay-btn py-1.5 px-2 bg-[#0a1424] text-text-secondary hover:text-text-primary border border-border/60 rounded font-mono text-xs text-center transition-colors';
+          }
+        });
+      }
+
+      function runSimulation() {
+        const selectedMotor = document.querySelector('input[name="sim-motor"]:checked').value;
+        const badge = document.getElementById('badge-resultado');
+        const kwSin = document.getElementById('kw-sin');
+        const kwCon = document.getElementById('kw-con');
+        const curveCon = document.getElementById('curve-con');
+
+        let dropKw = 5.8;
+        if (selectedMotor === 'bomba') dropKw = 3.4;
+        if (selectedMotor === 'extractor') dropKw = 2.1;
+
+        const delayFactor = Math.min(1.0, currentDelay / 15);
+        const simulatedPeak = Math.max(35.0, (40.6 - (dropKw * delayFactor))).toFixed(1);
+
+        if (kwSin) kwSin.textContent = '40.6 kW (Exceso)';
+        
+        if (simulatedPeak <= 40.0) {
+          if (kwCon) {
+            kwCon.textContent = `${simulatedPeak} kW (Aprobado)`;
+            kwCon.className = 'text-emerald-400 font-semibold';
+          }
+          if (badge) {
+            badge.textContent = `SEGURO (-${(40.6 - simulatedPeak).toFixed(1)} kW)`;
+            badge.className = 'px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px] font-semibold';
+          }
+          if (curveCon) {
+            curveCon.setAttribute('d', 'M 0 65 Q 100 55, 180 48 T 300 42');
+            curveCon.setAttribute('stroke', '#10b981');
+          }
+        } else {
+          if (kwCon) {
+            kwCon.textContent = `${simulatedPeak} kW (Excede lím)`;
+            kwCon.className = 'text-coral-400 font-semibold';
+          }
+          if (badge) {
+            badge.textContent = `RIESGO (Insuficiente)`;
+            badge.className = 'px-1.5 py-0.5 rounded bg-coral-500/15 border border-coral-500/30 text-coral-400 font-mono text-[10px] font-semibold';
+          }
+          if (curveCon) {
+            curveCon.setAttribute('d', 'M 0 65 Q 100 55, 180 34 T 300 22');
+            curveCon.setAttribute('stroke', '#ef4444');
+          }
+        }
+      }
+
+      const btnAplicarRec = document.getElementById('btn-aplicar-rec');
+      if (btnAplicarRec) {
+        btnAplicarRec.addEventListener('click', () => {
+          const confirmed = confirm('¿Confirmar orden SCADA para diferir ciclo de compresión del taller hasta las 12:15?');
+          if (confirmed) {
+            btnAplicarRec.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span><span>Comando Enviado...</span>';
+            setTimeout(() => {
+              btnAplicarRec.innerHTML = '<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>Diferido Activo</span>';
+              btnAplicarRec.className = 'px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold text-xs rounded flex items-center gap-1.5';
+            }, 800);
+          }
+        });
+      }
+    </script>
+</main>
+</div>
+</body></html>
