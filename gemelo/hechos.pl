@@ -100,6 +100,7 @@ cargar_escenario(Nombre) :-
     atom_concat('escenarios/', Nombre, Path1),
     atom_concat(Path1, '.pl', Path),
     consult(Path),
+    cargar_datos,
     assertz(escenario_actual(Nombre)).
 
 % descripcion_escenario(Nombre, Texto): descripcion de cada escenario

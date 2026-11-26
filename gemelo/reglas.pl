@@ -56,4 +56,37 @@
 :- use_module(library(apply)).
 :- use_module(hechos).
 
-% Implementacion pendiente
+% Stubs temporales (se implementaran en las siguientes fases)
+ultima_lectura(_, _, _, _) :- fail.
+edad(_, _) :- fail.
+fresca(_, _, _) :- fail.
+valor(_, _, _) :- fail.
+segundo_del_dia_a_hora(_, _) :- fail.
+ventana_actual(_, _) :- fail.
+acumulado_ventana(_, _) :- fail.
+proyeccion(_, _, _, _) :- fail.
+alarma_demanda(_, _, _, _) :- fail.
+diferir(_, _, _) :- fail.
+salto_contador(_, _, _) :- fail.
+consumo_medidor(_, _, _, _) :- fail.
+consumo_piso(_, _, _, _) :- fail.
+timeouts(_, _) :- fail.
+lento(_, _) :- fail.
+causante_bus(_, _, _) :- fail.
+victima(_, _) :- fail.
+lecturas_viejas_por_bus(_) :- fail.
+alarmas_afectadas(_) :- fail.
+aislar(_, _) :- fail.
+caida_voltaje(_, _) :- fail.
+causa_caida(_, _, _, _, _) :- fail.
+reparto_lectura(_, _, _, _) :- fail.
+reparto_energia(_, _, _, _) :- fail.
+ventana_maxima(_, _, _) :- fail.
+reparto_demanda(_, _, _, _, _) :- fail.
+consumo_nocturno(_, _, _) :- fail.
+factor_potencia(_, _, _, _) :- fail.
+se_le_falla_a(_, _) :- fail.
+decide(_, _, _) :- fail.
+situacion(_, _, _) :- fail.
+que_falta(_, _) :- fail.
+hipotesis(_, _, _, _) :- fail.

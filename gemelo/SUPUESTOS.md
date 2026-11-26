@@ -48,6 +48,8 @@ Estas vienen del documento del proyecto #8 original:
 
 Esta sección la llena el agente (OpenCode) cuando encuentra algo ambiguo y elige la opción más simple. Las decisiones deben estar numeradas y fechadas.
 
+1. **Carga de escenarios (Nov 25, 2026)**: Los archivos de escenarios definen un predicado `cargar_datos/0` que usa `assertz` para agregar los hechos dinámicos. `cargar_escenario/1` limpia la base de datos, consulta el archivo y llama a `cargar_datos/0`. Esto es más simple que intentar módulos complejos y permite generar lecturas repetitivas con bucles.
+
 ---
 
-*Última actualización: [pendiente]*
+*Última actualización: Nov 25, 2026*
