@@ -207,3 +207,39 @@ test(dato_corrupto, [setup(cargar_escenario(s2_corrupto))]) :-
     assertion(R = no_se_puede_saber).
 
 :- end_tests(situacion2).
+
+% ============================================================================
+% Fase 5: Pruebas de Situacion 3 - Medidor lento
+% ============================================================================
+
+:- begin_tests(situacion3).
+
+test(timeouts_s3, [setup(cargar_escenario(s3))]) :-
+    timeouts(p1_alumbrado, N1),
+    assertion(N1 == 3),
+    timeouts(p1_motores, N2),
+    assertion(N2 == 2),
+    timeouts(p1_general, N3),
+    assertion(N3 == 0).
+
+test(lento_s3, [setup(cargar_escenario(s3))]) :-
+    lento(p1_general, E1),
+    assertion(E1 == si),
+    lento(p1_motores, E2),
+    assertion(E2 == no).
+
+test(causante_s3, [setup(cargar_escenario(s3))]) :-
+    causante_bus(bus_a, M, _),
+    assertion(M == p1_general).
+
+test(victimas_s3, [setup(cargar_escenario(s3))]) :-
+    findall(M, victima(M, p1_general), Vs),
+    sort(Vs, Ordenadas),
+    assertion(Ordenadas == [p1_alumbrado, p1_motores]).
+
+test(alarma_no_puedo_decir_s3, [setup(cargar_escenario(s3))]) :-
+    alarma_demanda(Tipo, _, Certeza, _),
+    assertion(Tipo == no_puedo_decir),
+    assertion(Certeza == no_se).
+
+:- end_tests(situacion3).

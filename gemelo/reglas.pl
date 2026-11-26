@@ -361,14 +361,77 @@ consumo_piso(Piso, Desde, Hasta, R, Sustento) :-
         )
     ).
 
+% ============================================================================
+% Fase 5: Situacion 3 - Medidor lento
+% ============================================================================
+
+% timeouts(+Medidor, -N): cuenta timeouts en las ultimas 3 consultas
+timeouts(M, N) :-
+    findall(S, consulta(M, _, _, S), Segundos),
+    sort(Segundos, Ordenados),
+    reverse(Ordenados, Ultimos),
+    ( length(Ultimos, Len), Len >= 3 ->
+        Ultimos = [S1, S2, S3|_],
+        findall(1, (member(S, [S1, S2, S3]), consulta(M, timeout, _, S)), Ts),
+        length(Ts, N)
+    ;   N = 0
+    ).
+
+% lento(+Medidor, -Estado): si | no | no_se
+lento(M, Estado) :-
+    limite(ms_lento, Umbral),
+    findall(S-Ms-R, consulta(M, R, Ms, S), Consultas),
+    sort(Consultas, Ordenadas),
+    reverse(Ordenadas, Ultimas),
+    ( length(Ultimas, Len), Len >= 3 ->
+        Ultimas = [_-Ms1-R1, _-Ms2-R2, _-Ms3-R3|_],
+        findall(1, (member(Ms-R, [Ms1-R1, Ms2-R2, Ms3-R3]), R == ok, Ms > Umbral), Lentos),
+        length(Lentos, NLentos),
+        ( NLentos >= 2 ->
+            Estado = si
+        ;   Estado = no
+        )
+    ;   Estado = no_se
+    ).
+
+% causante_bus(+Bus, -Medidor, -Explicacion)
+causante_bus(Bus, Causante, Explicacion) :-
+    findall(Orden-M, medidor(M, _, Bus, Orden), Medidores),
+    sort(Medidores, Ordenados),
+    encontrar_causante(Ordenados, Causante),
+    Explicacion = [bus(Bus), primer_lento(Causante)].
+
+% encontrar_causante(+MedidoresPorOrden, -Causante)
+encontrar_causante([_-M|Ms], Causante) :-
+    lento(M, si), !,
+    Causante = M.
+encontrar_causante([_|Ms], Causante) :-
+    encontrar_causante(Ms, Causante).
+
+% victima(?Medidor, -Causante)
+victima(M, Causante) :-
+    medidor(M, _, Bus, OrdenM),
+    causante_bus(Bus, Causante, _),
+    M \= Causante,
+    medidor(Causante, _, Bus, OrdenC),
+    OrdenM > OrdenC,
+    ( timeouts(M, N), N > 0 ; fresca(M, _, no) ).
+
+% lecturas_viejas_por_bus(-Lista)
+lecturas_viejas_por_bus(Lista) :-
+    findall(M, (medidor(M, _, _, _), fresca(M, kw, no)), Lista).
+
+% alarmas_afectadas(-Lista)
+alarmas_afectadas(Lista) :-
+    findall(alarma(M), (victima(M, _), fresca(M, kw, no)), Lista).
+
+% aislar(-Medidor, -Explicacion)
+aislar(M, Explicacion) :-
+    causante_bus(_, M, _),
+    findall(V, victima(V, M), Victimas),
+    Explicacion = [causante(M), victimas(Victimas)].
+
 % Stubs temporales (se implementaran en las siguientes fases)
-timeouts(_, _) :- fail.
-lento(_, _) :- fail.
-causante_bus(_, _, _) :- fail.
-victima(_, _) :- fail.
-lecturas_viejas_por_bus(_) :- fail.
-alarmas_afectadas(_) :- fail.
-aislar(_, _) :- fail.
 caida_voltaje(_, _) :- fail.
 causa_caida(_, _, _, _, _) :- fail.
 reparto_lectura(_, _, _, _) :- fail.
