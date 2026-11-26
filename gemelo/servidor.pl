@@ -84,7 +84,9 @@ api_decide(Peticion) :-
     http_parameters(Peticion, [entidad(Entidad, [])]),
     atom_string(E, Entidad),
     decide(E, Decision, Explicacion),
-    reply_json_dict(_{entidad: E, decision: Decision, explicacion: Explicacion}).
+    term_string(Decision, DecStr),
+    term_string(Explicacion, ExplStr),
+    reply_json_dict(_{entidad: E, decision: DecStr, explicacion: ExplStr}).
 
 api_situaciones(_Peticion) :-
     findall(_{entidad: E, situacion: S},
@@ -103,7 +105,9 @@ api_hipotesis(Peticion) :-
     atom_string(M, Motor),
     atom_number(RetrasoStr, Retraso),
     hipotesis(mover(M, Retraso), ventana, Decision, Explicacion),
-    reply_json_dict(_{motor: M, retraso: Retraso, decision: Decision, explicacion: Explicacion}).
+    term_string(Decision, DecStr),
+    term_string(Explicacion, ExplStr),
+    reply_json_dict(_{motor: M, retraso: Retraso, decision: DecStr, explicacion: ExplStr}).
 
 api_caida(Peticion) :-
     http_parameters(Peticion, [piso(Piso, [])]),
